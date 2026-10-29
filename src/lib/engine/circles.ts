@@ -33,7 +33,7 @@ export async function createCircle(memberId: string, input: CreateCircleInput) {
 }
 
 /** Member signs the rules hash with their key (demo: server-held, encrypted at rest). */
-async function signAndJoin(tx: Tx, circleId: string, memberId: string, hash: string, at: Date, prefs?: unknown) {
+export async function signAndJoin(tx: Tx, circleId: string, memberId: string, hash: string, at: Date, prefs?: unknown) {
   const [member] = await tx.select().from(s.members).where(eq(s.members.id, memberId));
   if (!member?.privateKeyEnc) throw new EngineError("INVALID", "member has no signing key");
   const signature = signMessage(decryptPrivateKey(member.privateKeyEnc), hash);

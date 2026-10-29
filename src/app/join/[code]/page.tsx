@@ -6,6 +6,7 @@ import { currentMember } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
 import * as s from "@/lib/db/schema";
 import { circleByInvite } from "@/lib/engine/circles";
+import { openSeat } from "@/lib/engine/leave";
 import { formatCents } from "@/lib/protocol";
 import { periodWord, ruleList } from "@/lib/circles/rule-list";
 import { JoinButton } from "./join-button";
@@ -24,6 +25,10 @@ export default async function Join({ params }: { params: Promise<{ code: string 
   const [owner] = await db().select({ name: s.members.name }).from(s.members).where(eq(s.members.id, circle.createdBy));
   const per = periodWord(circle.frequency);
   const rules = ruleList(circle);
+  // A running circle takes a newcomer only into a seat someone left (spec 8.7.1); terms shown before signing.
+  const seat = circle.status === "ACTIVE" && !mine ? await openSeat(circle.id) : null;
+  const [turn] = seat ? await db().select().from(s.rounds).where(and(eq(s.rounds.circleId, circle.id), eq(s.rounds.seq, seat.terms.turnSeq))) : [];
+  const day = (d: Date) => d.toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
   return (
     <main className="mx-auto flex min-h-dvh max-w-[480px] flex-col px-6 pt-14 pb-7 rise">
       <div className="flex items-center">
@@ -34,9 +39,27 @@ export default async function Join({ params }: { params: Promise<{ code: string 
         ))}
       </div>
       <h1 className="num mt-5 text-[32px] font-bold leading-tight tracking-tight">{owner?.name ?? "Someone"} invited you to {circle.name}</h1>
-      <p className="mt-2.5 text-base text-muted">
-        {circle.size} people · {formatCents(circle.contributionAmount)} a {per} · you get <b className="num text-text">{formatCents(circle.contributionAmount * circle.size)}</b> once
-      </p>
+      {seat && turn ? (
+        <>
+          <p className="mt-2.5 text-base text-muted">A seat is open. You start paying from turn {seat.joinSeq} and collect on {day(turn.payoutDueAt)}.</p>
+          <dl aria-label="Your terms" className="mt-5 flex flex-col border-t border-surface">
+            {[
+              ["You pay", `${formatCents(circle.contributionAmount + seat.fee)} a ${per}`, "var(--text)"],
+              [`Missed turns (${seat.terms.missedRounds}), held back`, `−${formatCents(seat.terms.holdback)}`, "var(--muted)"],
+              ["You collect", formatCents(seat.terms.payout), "var(--paid)"],
+            ].map(([k, v, color]) => (
+              <div key={k} className="flex items-baseline justify-between border-b border-surface py-3">
+                <dt className="text-[15px] text-[#52525B]">{k}</dt>
+                <dd className="num text-[17px] font-bold" style={{ color }}>{v}</dd>
+              </div>
+            ))}
+          </dl>
+        </>
+      ) : (
+        <p className="mt-2.5 text-base text-muted">
+          {circle.size} people · {formatCents(circle.contributionAmount)} a {per} · you get <b className="num text-text">{formatCents(circle.contributionAmount * circle.size)}</b> once
+        </p>
+      )}
       <div className="mt-6 flex items-start gap-2.5">
         <Pebble size={26} />
         <span className="pt-0.5 text-[15px]">Here are the rules everyone signs:</span>
@@ -52,7 +75,7 @@ export default async function Join({ params }: { params: Promise<{ code: string 
           </li>
         ))}
       </ol>
-      <JoinButton code={code} full={ms.length >= circle.size && !mine} forming={circle.status === "FORMING"} />
+      <JoinButton code={code} full={!seat && ms.length >= circle.size && !mine} forming={circle.status === "FORMING" || !!seat} late={!!seat} />
     </main>
   );
 }

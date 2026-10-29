@@ -6,7 +6,7 @@ import { uuidv7 } from "@/lib/ids";
 import { getPaymentProvider } from "@/lib/paypal";
 import { publish } from "@/lib/realtime/bus";
 import { completionEvent } from "@/lib/score";
-import { afterCollection, protectionFee, settleRound, transitionCircle, transitionRound, type SeatContribution } from "@/lib/treasury";
+import { afterCollection, protectionFee, settleRound, splitRecoveryPayment, transitionCircle, transitionRound, type SeatContribution } from "@/lib/treasury";
 import { now } from "./clock";
 import { poolMove } from "./pool";
 import { payoutNeedsReview } from "./fraud";
@@ -137,6 +137,14 @@ export async function settleAndPay(roundId: string) {
     const open = await tx.select({ membershipId: s.recoveries.membershipId, n: sql<number>`count(*)::int` }).from(s.recoveries).where(and(inArray(s.recoveries.membershipId, ms.map((m) => m.id)), inArray(s.recoveries.status, ["OPEN", "PARTIAL"]))).groupBy(s.recoveries.membershipId);
     const openMisses = new Map(open.map((o) => [o.membershipId, o.n]));
     const seats: SeatContribution[] = cs.map((c) => ({ membershipId: c.membershipId, amount: c.amount, status: c.status, alreadyCollected: collected.has(c.membershipId), openMisses: openMisses.get(c.membershipId) ?? 0 }));
+    // Open seats (spec 8.7): a member left and nobody pays for that seat this round. The pool covers it,
+    // attributed to the leaver; no invoice (a late joiner's holdback or the leaver's own invoice repays it).
+    const inRound = new Set(cs.map((c) => c.membershipId));
+    const openOwners = ms.filter((l) => l.status === "LEFT" && !inRound.has(l.id) && !ms.some((x) => x.replacesMembershipId === l.id && inRound.has(x.id)));
+    for (let i = cs.length; i < circle.size; i++) seats.push({ membershipId: null, amount: circle.contributionAmount, status: "FAILED" });
+    if (circle.size - cs.length > openOwners.length) throw new EngineError("CONFLICT", "open seats without a leaver");
+    const recipient = ms.find((x) => x.id === round.recipientMembershipId)!;
+    const leaverOf = recipient.replacesMembershipId ? ms.find((x) => x.id === recipient.replacesMembershipId) : undefined;
 
     // Swap bonuses: the recipient pays one (moved earlier) or receives one held for them (moved later).
     const trades = await tx.select().from(s.turnTrades).where(and(eq(s.turnTrades.circleId, circle.id), eq(s.turnTrades.status, "CONFIRMED")));
@@ -156,6 +164,10 @@ export async function settleAndPay(roundId: string) {
       reserveBalance: reserve?.balance ?? 0,
       bonusPaid: paying ? { tradeId: paying.id, amount: paying.bonusAmount, forMembershipId: paying.toMembership! } : null,
       bonusReleases: releasing.map((t) => ({ tradeId: t.id, amount: t.bonusAmount })),
+      lateJoin:
+        leaverOf && (recipient.joinedRoundSeq ?? 1) > 1
+          ? { missedRounds: recipient.joinedRoundSeq! - 1, poolRepayDue: leaverOf.openSeatCovered, leaverMembershipId: leaverOf.id, leaverRefundDue: leaverOf.refundDue - leaverOf.refundPaid }
+          : null,
     });
 
     if (res.pause) {
@@ -166,17 +178,21 @@ export async function settleAndPay(roundId: string) {
     }
 
     // Covers and recoveries.
+    let nextOpen = 0;
     for (const cv of res.covers) {
-      const c = cs.find((x) => x.membershipId === cv.membershipId)!;
+      const c = cv.membershipId ? cs.find((x) => x.membershipId === cv.membershipId)! : null;
+      const owner = c ? c.membershipId : openOwners[nextOpen++]!.id;
+      const ref = c ? c.id : `open-seat:${owner}:${round.seq}`;
       if (cv.fromPool > 0) {
-        await appendLedger(tx, circle.id, { type: "POOL_COVER", roundId, membershipId: c.membershipId, amount: cv.fromPool }, "worker", at);
-        await poolMove(tx, { circleId: circle.id, bucket: "free" }, "COVER_OUT", -cv.fromPool, c.id);
+        await appendLedger(tx, circle.id, { type: "POOL_COVER", roundId, membershipId: owner, amount: cv.fromPool }, "worker", at);
+        await poolMove(tx, { circleId: circle.id, bucket: "free" }, "COVER_OUT", -cv.fromPool, ref);
       }
       if (cv.fromReserve > 0) {
-        await appendLedger(tx, circle.id, { type: "RESERVE_COVER", roundId, membershipId: c.membershipId, amount: cv.fromReserve }, "worker", at);
-        await poolMove(tx, "reserve", "RESERVE_COVER_OUT", -cv.fromReserve, c.id);
+        await appendLedger(tx, circle.id, { type: "RESERVE_COVER", roundId, membershipId: owner, amount: cv.fromReserve }, "worker", at);
+        await poolMove(tx, "reserve", "RESERVE_COVER_OUT", -cv.fromReserve, ref);
       }
-      await tx.update(s.contributions).set({ status: "COVERED", updatedAt: new Date() }).where(eq(s.contributions.id, c.id));
+      if (c) await tx.update(s.contributions).set({ status: "COVERED", updatedAt: new Date() }).where(eq(s.contributions.id, c.id));
+      else await tx.update(s.memberships).set({ openSeatCovered: sql`${s.memberships.openSeatCovered} + ${cv.fromPool + cv.fromReserve}`, updatedAt: new Date() }).where(eq(s.memberships.id, owner));
     }
     if (res.reserveOwedIncrease > 0) await tx.update(s.circles).set({ reserveOwed: sql`${s.circles.reserveOwed} + ${res.reserveOwedIncrease}` }).where(eq(s.circles.id, circle.id));
     const recoveryIds: string[] = [];
@@ -200,13 +216,47 @@ export async function settleAndPay(roundId: string) {
       await tx.update(s.turnTrades).set({ status: "SETTLED", updatedAt: new Date() }).where(eq(s.turnTrades.id, t.id));
     }
 
+    // Late joiner: missed rounds are held back; that repays the pool first, then refunds the leaver.
+    let refund: { membershipId: string; amount: number } | null = null;
+    if (leaverOf && res.holdback.amount > 0) {
+      await appendLedger(tx, circle.id, { type: "JOINER_HOLDBACK", membershipId: recipient.id, amount: res.holdback.amount, toPool: res.holdback.toPool, toLeaverRefund: res.holdback.toLeaverRefund }, "worker", at);
+      await refillPool(tx, circle.id, res.holdback.toPool, `holdback:${recipient.id}`);
+      await tx.update(s.memberships).set({ openSeatCovered: 0, refundPaid: sql`${s.memberships.refundPaid} + ${res.holdback.toLeaverRefund}`, updatedAt: new Date() }).where(eq(s.memberships.id, leaverOf.id));
+      if (res.holdback.toLeaverRefund > 0) refund = { membershipId: leaverOf.id, amount: res.holdback.toLeaverRefund };
+    }
+
+    // The open seat's own turn with nobody in it: refund the leaver, and the rest of the pot refills the
+    // pool that covered the empty seat (it balances to the cent over the circle).
+    let payoutAmount = res.payoutAmount;
+    if (recipient.status === "LEFT") {
+      const toLeaver = Math.min(recipient.refundDue - recipient.refundPaid, res.payoutAmount);
+      const toPool = res.payoutAmount - toLeaver;
+      await appendLedger(tx, circle.id, { type: "OPEN_SEAT_POT", roundId, membershipId: recipient.id, toLeaverRefund: toLeaver, toPool }, "worker", at);
+      await refillPool(tx, circle.id, toPool, `open-seat:${recipient.id}:${round.seq}`);
+      await tx.update(s.memberships).set({ refundPaid: sql`${s.memberships.refundPaid} + ${toLeaver}`, openSeatCovered: 0, updatedAt: new Date() }).where(eq(s.memberships.id, recipient.id));
+      if (toLeaver > 0) await appendLedger(tx, circle.id, { type: "LEAVER_REFUND_PAID", membershipId: recipient.id, amount: toLeaver }, "worker", at);
+      payoutAmount = toLeaver;
+      if (toLeaver === 0) {
+        await tx.update(s.rounds).set({ status: transitionRound("SETTLING", "PAID_OUT"), updatedAt: new Date() }).where(eq(s.rounds.id, roundId));
+        const remaining = await tx.select({ id: s.rounds.id }).from(s.rounds).where(and(eq(s.rounds.circleId, circle.id), sql`${s.rounds.status} <> 'PAID_OUT'`));
+        if (remaining.length === 0) await completeCircle(tx, circle, at);
+        return { circleId: circle.id, paused: true as const };
+      }
+    }
+
     // Payout row, ledger first.
     const payoutId = uuidv7();
     const fromPool = res.coverFromPool + res.coverFromReserve + res.bonusReleased;
-    await appendLedger(tx, circle.id, { type: "PAYOUT_SENT", payoutId, roundId, recipientMembershipId: round.recipientMembershipId!, amount: res.payoutAmount, fromPool }, "worker", at);
-    await tx.insert(s.payouts).values({ id: payoutId, roundId, amount: res.payoutAmount, fromPoolAmount: fromPool, status: "PENDING" });
-    const [recipient] = await tx.select({ email: s.members.paypalEmail, fallback: s.members.email }).from(s.memberships).innerJoin(s.members, eq(s.members.id, s.memberships.memberId)).where(eq(s.memberships.id, round.recipientMembershipId!));
-    return { circleId: circle.id, paused: false as const, payoutId, amount: res.payoutAmount, recipientEmail: recipient!.email ?? recipient!.fallback, seq: round.seq, recoveryIds, circleName: circle.name };
+    await appendLedger(tx, circle.id, { type: "PAYOUT_SENT", payoutId, roundId, recipientMembershipId: round.recipientMembershipId!, amount: payoutAmount, fromPool }, "worker", at);
+    await tx.insert(s.payouts).values({ id: payoutId, roundId, amount: payoutAmount, fromPoolAmount: fromPool, status: "PENDING" });
+    const [payee] = await tx.select({ email: s.members.paypalEmail, fallback: s.members.email }).from(s.memberships).innerJoin(s.members, eq(s.members.id, s.memberships.memberId)).where(eq(s.memberships.id, round.recipientMembershipId!));
+    let refundTo: { membershipId: string; amount: number; email: string } | null = null;
+    if (refund) {
+      const [r] = await tx.select({ email: s.members.paypalEmail, fallback: s.members.email }).from(s.memberships).innerJoin(s.members, eq(s.members.id, s.memberships.memberId)).where(eq(s.memberships.id, refund.membershipId));
+      await appendLedger(tx, circle.id, { type: "LEAVER_REFUND_PAID", membershipId: refund.membershipId, amount: refund.amount }, "worker", at);
+      refundTo = { ...refund, email: r!.email ?? r!.fallback };
+    }
+    return { circleId: circle.id, paused: false as const, payoutId, amount: payoutAmount, recipientEmail: payee!.email ?? payee!.fallback, seq: round.seq, recoveryIds, circleName: circle.name, refundTo };
   });
   if (!out) return null;
   await publish(out.circleId, "pool.updated");
@@ -219,11 +269,29 @@ export async function settleAndPay(roundId: string) {
   const result = await getPaymentProvider().sendPayout({ recipientEmail: out.recipientEmail, amount: out.amount, currency: "USD", senderItemId: out.payoutId, senderBatchId: roundId, note: `${out.circleName}: round ${out.seq} payout` });
   await db.update(s.payouts).set({ providerBatchId: result.batchId, providerItemId: result.itemId || null, status: result.status === "FAILED" ? "FAILED" : "SENT", updatedAt: new Date() }).where(eq(s.payouts.id, out.payoutId));
   if (result.status === "SUCCESS") await confirmPayout(out.payoutId);
+  // A late joiner's holdback refunds the member who left, as a separate PayPal payout.
+  if (out.refundTo) {
+    await getPaymentProvider()
+      .sendPayout({ recipientEmail: out.refundTo.email, amount: out.refundTo.amount, currency: "USD", senderItemId: `refund-${out.refundTo.membershipId}`, senderBatchId: `${roundId}-refund`, note: `${out.circleName}: your money back` })
+      .catch((e) => console.error("[leave] refund payout failed", e));
+  }
   for (const id of out.recoveryIds) {
     const { sendRecoveryInvoice } = await import("./recovery");
     await sendRecoveryInvoice(id).catch((e) => console.error("[recovery] invoice failed", e));
   }
   return out;
+}
+
+/** Money kept back for the pool (holdback, open seat's pot) repays the global reserve first, like a recovery. */
+async function refillPool(tx: Tx, circleId: string, amount: number, ref: string) {
+  if (amount <= 0) return;
+  const [c] = await tx.select({ owed: s.circles.reserveOwed }).from(s.circles).where(eq(s.circles.id, circleId));
+  const split = splitRecoveryPayment(amount, c!.owed);
+  if (split.toReserve > 0) {
+    await poolMove(tx, "reserve", "RESERVE_REPAY", split.toReserve, ref);
+    await tx.update(s.circles).set({ reserveOwed: sql`${s.circles.reserveOwed} - ${split.toReserve}` }).where(eq(s.circles.id, circleId));
+  }
+  if (split.toPool > 0) await poolMove(tx, { circleId, bucket: "free" }, "HOLDBACK_IN", split.toPool, ref);
 }
 
 /** Payout succeeded (sync in mock mode, webhook in sandbox). Idempotent. */

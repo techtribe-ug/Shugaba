@@ -5,7 +5,7 @@ import * as s from "@/lib/db/schema";
 import { now } from "@/lib/engine/clock";
 import { protectionFee } from "@/lib/treasury";
 
-export type SeatState = "paidout" | "now" | "paid" | "late" | "covered" | "due" | "failed";
+export type SeatState = "paidout" | "now" | "paid" | "late" | "covered" | "due" | "failed" | "open";
 
 /** Everything the circle home needs, already reduced to what a member may see. */
 export async function circleView(circleId: string, viewerId: string | null) {
@@ -30,16 +30,20 @@ export async function circleView(circleId: string, viewerId: string | null) {
   const pot = circle.contributionAmount * circle.size;
   const fee = protectionFee(circle.contributionAmount, circle.protectionTier);
 
-  const seats = ms.map((x) => {
+  // A member who left: their seat shows as open until someone takes it; then only the newcomer shows.
+  const replaced = new Set(ms.map((x) => x.m.replacesMembershipId).filter(Boolean));
+  const seats = ms.filter((x) => !replaced.has(x.m.id)).map((x) => {
     const c = contribs.find((c) => c.membershipId === x.m.id);
     let state: SeatState = "due";
+    const open = x.m.status === "LEFT" && !collected.has(x.m.id);
     if (current && current.recipientMembershipId === x.m.id && current.status !== "SCHEDULED") state = "now";
     else if (c?.status === "PAID" || c?.status === "LATE") state = "paid";
     else if (c?.status === "FAILED") state = current?.status === "GRACE" ? "late" : "failed";
     else if (c?.status === "COVERED") state = "covered";
     else if (collected.has(x.m.id)) state = "paidout";
+    if (open) state = "open";
     const turn = rounds.find((r) => r.recipientMembershipId === x.m.id);
-    return { membershipId: x.m.id, memberId: x.memberId, name: x.name, initials: x.name.slice(0, 1), position: turn?.seq ?? x.m.position, score: x.score, level: levelFor(x.score), state, isMe: x.memberId === viewerId, status: x.m.status };
+    return { membershipId: x.m.id, memberId: x.memberId, name: open ? "Open seat" : x.name, initials: x.name.slice(0, 1), position: turn?.seq ?? x.m.position, score: x.score, level: levelFor(x.score), state, isMe: x.memberId === viewerId, status: x.m.status };
   });
 
   const recipient = current ? nameOfMembership.get(current.recipientMembershipId ?? "") ?? "" : "";

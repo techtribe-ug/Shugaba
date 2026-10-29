@@ -54,6 +54,16 @@ export function narrate(type: string, p: Record<string, unknown>, name: NameOf):
       return { text: "The circle is paused for a check", amount: null, kind: "late" };
     case "CIRCLE_COMPLETED":
       return { text: "Every turn is paid. The circle is complete", amount: null, kind: "info" };
+    case "MEMBER_LEFT":
+      return { text: `${n("membershipId")} left the circle`, amount: null, kind: "info" };
+    case "SEAT_OPENED":
+      return { text: `Turn ${String(p.seq)} is open for a new member`, amount: null, kind: "info" };
+    case "SEAT_FILLED":
+      return { text: `${n("membershipId")} took the open seat`, amount: null, kind: "info" };
+    case "OPEN_SEAT_POT":
+      return { text: "The open seat's turn went back to the pool", amount: amt("toPool"), kind: "info" };
+    case "LEAVER_REFUND_PAID":
+      return { text: `${n("membershipId")} got their money back`, amount: null, kind: "out" };
     case "SCORE_CHANGED":
       return null; // private to the member
     default:
