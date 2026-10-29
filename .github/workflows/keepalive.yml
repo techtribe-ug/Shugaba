@@ -1,0 +1,18 @@
+name: Keep-alive
+
+# Backup only (spec 4.1): UptimeRobot pings every 5 minutes. GitHub may delay scheduled runs.
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /api/health
+        env:
+          URL: ${{ vars.KEEPALIVE_URL || 'https://shugaba-demo.onrender.com/api/health' }}
+        run: curl -fsS --retry 3 --retry-delay 20 --max-time 90 "$URL"
