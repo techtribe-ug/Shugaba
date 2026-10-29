@@ -10,6 +10,7 @@ const BADGE: Partial<Record<SeatState, { bg: string; icon: IconName; label: stri
 
 /** Grey person silhouette with one small state badge (design: GAvatars). Paid-out members fade. */
 export function Avatar({ size = 48, state = "due", levelColor, levelScale = 1 }: { size?: number; state?: SeatState; levelColor?: string; levelScale?: number }) {
+  if (state === "open") return <span className="block shrink-0 rounded-full border-2 border-dashed border-[#D4D4D8] bg-white" style={{ width: size, height: size }} />;
   const faded = state === "paidout";
   const badge = BADGE[state];
   const perch = Math.round(size * 0.36 * levelScale);
@@ -45,4 +46,5 @@ export const STATE_LABEL: Record<SeatState, string> = {
   covered: "covered by the pool",
   due: "due",
   failed: "missed",
+  open: "open seat",
 };

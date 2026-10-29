@@ -2,13 +2,13 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { CreateCircleInput } from "@/lib/protocol";
 import { clearSession, currentMember, sessionFreshForMoney, setSession } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
-import { members } from "@/lib/db/schema";
-import { acceptOrderAndStart, createCircle, EngineError, joinCircle, requestSwap, signTrade } from "@/lib/engine";
+import { members, memberships } from "@/lib/db/schema";
+import { acceptOrderAndStart, circleByInvite, createCircle, EngineError, joinCircle, joinOpenSeat, leaveCircle, requestSwap, signTrade, startMemberPayment } from "@/lib/engine";
 import { CAST, castId, OPERATOR_ID } from "@/lib/demo/cast";
 import { rateLimit } from "@/lib/security/rate-limit";
 import { E164, setWhatsApp } from "@/lib/notify/optin";
@@ -120,6 +120,41 @@ export async function setWhatsAppAction(phone: string | null): Promise<ActionRes
     await setWhatsApp(me.id, clean, "settings");
     revalidatePath("/settings");
     return { ok: true };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/** Leave a circle (spec 8.7, design GLeave). After collecting, goes straight to paying what is still owed. */
+export async function leaveAction(circleId: string): Promise<ActionResult & { approvalUrl?: string | null }> {
+  const me = await requireMember();
+  try {
+    await rateLimit(`money:${me.id}`, 10, 60);
+    const id = z.string().min(1).max(64).parse(circleId);
+    const [m] = await db().select({ id: memberships.id }).from(memberships).where(and(eq(memberships.circleId, id), eq(memberships.memberId, me.id)));
+    if (!m) return { ok: false, error: "You are not in this circle." };
+    const out = await leaveCircle(m.id, me.id);
+    revalidatePath("/home");
+    if (out.recoveryId) {
+      const pay = await startMemberPayment({ memberId: me.id, circleId: id, purpose: "recovery", part: "full" });
+      return { ok: true, approvalUrl: pay.approvalUrl };
+    }
+    return { ok: true, approvalUrl: null };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/** Take an open seat in a running circle (spec 8.7.1). */
+export async function lateJoinAction(code: string, agreed: boolean): Promise<ActionResult & { approvalUrl?: string | null; circleId?: string }> {
+  const me = await requireMember();
+  try {
+    if (!agreed) return { ok: false, error: "Tick I agree first." };
+    await rateLimit(`money:${me.id}`, 10, 60);
+    const circle = await circleByInvite(z.string().trim().min(4).max(32).parse(code));
+    if (!circle) return { ok: false, error: "This invite has expired." };
+    const r = await joinOpenSeat(me.id, circle.id);
+    return { ok: true, approvalUrl: r.approvalUrl, circleId: circle.id };
   } catch (e) {
     return fail(e);
   }

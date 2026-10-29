@@ -86,6 +86,13 @@ export const memberships = pgTable(
     status: text("status", { enum: ["INVITED", "SIGNED", "ACTIVE", "PAUSED", "REMOVED", "LEFT"] }).notNull().default("INVITED"),
     agentPrefsJson: jsonb("agent_prefs_json").notNull().default(sql`'{}'::jsonb`),
     joinedRoundSeq: integer("joined_round_seq"),
+    // Leaving (spec 8.7): what this member paid in and is owed back, and pool covers paid for the empty seat.
+    leftAt: ts("left_at"),
+    refundDue: money("refund_due").notNull().default(0),
+    refundPaid: money("refund_paid").notNull().default(0),
+    openSeatCovered: money("open_seat_covered").notNull().default(0),
+    // Joining late (spec 8.7.1): the leaver whose seat this member took.
+    replacesMembershipId: text("replaces_membership_id"),
     ...timestamps,
   },
   (t) => [uniqueIndex("memberships_circle_member").on(t.circleId, t.memberId), index("memberships_member").on(t.memberId)],
