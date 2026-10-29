@@ -28,6 +28,10 @@ export async function processWebhook(eventId: string) {
       case "PAYMENT.CAPTURE.COMPLETED": {
         const custom = String(r.custom_id ?? "");
         if (custom.startsWith("catchup:")) await recordChargeResult(custom.slice(8), { paid: true, ref: String(r.id) });
+        if (custom.startsWith("recovery:")) {
+          const amount = r.amount as { value?: string } | undefined;
+          if (amount?.value) await applyRecoveryPayment(custom.slice(9), fromPayPalValue(amount.value), String(r.id));
+        }
         break;
       }
       case "INVOICING.INVOICE.PAID": {

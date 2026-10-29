@@ -7,7 +7,7 @@ import { db } from "@/lib/db/client";
 import * as s from "@/lib/db/schema";
 import { circleByInvite } from "@/lib/engine/circles";
 import { formatCents } from "@/lib/protocol";
-import { protectionFee } from "@/lib/treasury";
+import { periodWord, ruleList } from "@/lib/circles/rule-list";
 import { JoinButton } from "./join-button";
 
 export const dynamic = "force-dynamic";
@@ -22,14 +22,8 @@ export default async function Join({ params }: { params: Promise<{ code: string 
   if (mine?.status === "ACTIVE") redirect(`/c/${circle.id}`);
   const ms = await db().select().from(s.memberships).where(eq(s.memberships.circleId, circle.id));
   const [owner] = await db().select({ name: s.members.name }).from(s.members).where(eq(s.members.id, circle.createdBy));
-  const fee = protectionFee(circle.contributionAmount, circle.protectionTier);
-  const per = circle.frequency === "WEEKLY" ? "week" : circle.frequency === "DAILY" ? "day" : "month";
-  const rules = [
-    [`Pay ${formatCents(circle.contributionAmount + fee.fee)} every ${per}`, `${formatCents(circle.contributionAmount)} to the pot, ${formatCents(fee.fee)} to the protection pool.`],
-    ["Turns follow Circle Score", "Highest score goes first. You can swap later."],
-    [`Late? You get ${circle.graceHours} hours`, "Then the pool covers you and you pay it back."],
-    ["Payouts only go to your own PayPal", "Nobody can redirect your money."],
-  ];
+  const per = periodWord(circle.frequency);
+  const rules = ruleList(circle);
   return (
     <main className="mx-auto flex min-h-dvh max-w-[480px] flex-col px-6 pt-14 pb-7 rise">
       <div className="flex items-center">
