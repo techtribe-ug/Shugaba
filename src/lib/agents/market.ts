@@ -33,6 +33,8 @@ export async function negotiate(input: {
   pot: number;
   reason: string;
   rationale?: Rationale;
+  /** Set when the member dragged onto one specific turn: only that member's agent is asked. */
+  targetMembershipId?: string;
 }): Promise<{ transcript: { by: string; msg: SwapMessage }[]; terms: TradeTerms | null }> {
   const { requester, pot } = input;
   const say = input.rationale ?? plainRationale;
@@ -43,7 +45,9 @@ export async function negotiate(input: {
   ];
 
   // Candidates hold an earlier, unpaid turn; nearest turn first.
-  const candidates = input.others.filter((o) => !o.collected && o.turnSeq < requester.turnSeq).sort((a, b) => b.turnSeq - a.turnSeq);
+  const candidates = input.others
+    .filter((o) => !o.collected && o.turnSeq < requester.turnSeq && (!input.targetMembershipId || o.membershipId === input.targetMembershipId))
+    .sort((a, b) => b.turnSeq - a.turnSeq);
   let rounds = 0;
   for (const o of candidates) {
     if (rounds >= MAX_NEGOTIATION_ROUNDS) break;
