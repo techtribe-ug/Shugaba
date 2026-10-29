@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BackBar } from "@/components/ui/top-bar";
 import { currentMember } from "@/lib/auth/session";
@@ -27,6 +28,9 @@ export default async function Settings() {
             </div>
           ))}
         </dl>
+        <Link href="/score" className="flex min-h-12 items-center justify-between border-b border-surface text-[15px] font-bold text-text no-underline">
+          My score <span className="num text-muted">{me.circleScore}</span>
+        </Link>
         <form action={logout} className="mt-auto">
           <button className="flex h-13 w-full items-center justify-center text-[15px] font-bold text-failed">Log out</button>
         </form>
