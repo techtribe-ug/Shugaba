@@ -6,7 +6,7 @@ import { assertDemoGuard } from "./src/lib/security/demo-guard";
 assertDemoGuard(process.env);
 
 const config: NextConfig = {
-  serverExternalPackages: ["pg-boss", "postgres"],
+  serverExternalPackages: ["pg-boss", "pg", "postgres"],
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders() }];
   },
