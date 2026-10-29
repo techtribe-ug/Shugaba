@@ -1,10 +1,9 @@
 import { and, asc, eq, inArray } from "drizzle-orm";
-import { AgentPrefs } from "@/lib/protocol";
-import { negotiate, type Rationale } from "@/lib/agents/market";
+import type { Rationale } from "@/lib/agents/market";
 import { db as getDb } from "@/lib/db/client";
 import * as s from "@/lib/db/schema";
 import { getMockProvider } from "@/lib/paypal";
-import { acceptOrderAndStart, appendTranscript, applyRecoveryPayment, joinCircle, markAgreed, moveClockTo, now, openSwapRequest, runDue, signTrade, startMandate } from "@/lib/engine";
+import { acceptOrderAndStart, applyRecoveryPayment, joinCircle, moveClockTo, now, requestSwap, runDue, signTrade, startMandate } from "@/lib/engine";
 import { CAST, castId, FAMILY_CIRCLE_ID, FAMILY_INVITE, type CastMember } from "./cast";
 
 export const GOLDEN_STEPS = [
@@ -114,23 +113,11 @@ export async function failMusaNext() {
 
 /** Step 8: Tunde's agent asks; other agents answer inside their prefs; both humans sign. */
 export async function runTundeSwap(opts: { autoConfirm?: boolean; rationale?: Rationale } = {}) {
-  const db = getDb();
-  const tunde = await membershipOf("tunde");
-  if (!tunde) throw new Error("Tunde is not in the circle");
-  const trade = await openSwapRequest(FAMILY_CIRCLE_ID, tunde.id, "School fees are due this month");
-  const rounds = await db.select().from(s.rounds).where(eq(s.rounds.circleId, FAMILY_CIRCLE_ID));
-  const ms = await db.select({ m: s.memberships, member: s.members }).from(s.memberships).innerJoin(s.members, eq(s.members.id, s.memberships.memberId)).where(eq(s.memberships.circleId, FAMILY_CIRCLE_ID));
-  const turnOf = (id: string) => rounds.find((r) => r.recipientMembershipId === id)!;
-  const toMarket = (x: (typeof ms)[number]) => ({ membershipId: x.m.id, name: x.member.name, turnSeq: turnOf(x.m.id).seq, collected: turnOf(x.m.id).status === "PAID_OUT", prefs: AgentPrefs.parse(x.m.agentPrefsJson ?? {}) });
-  const me = ms.find((x) => x.m.id === tunde.id)!;
-  const { transcript, terms } = await negotiate({ requester: toMarket(me), others: ms.filter((x) => x.m.id !== tunde.id).map(toMarket), pot: 30000, reason: "School fees are due this month", rationale: opts.rationale });
-  await appendTranscript(trade.id, transcript.slice(1));
-  if (!terms) return { tradeId: trade.id, agreed: false };
-  const v = await markAgreed(trade.id, terms);
-  if (!v.ok || !opts.autoConfirm) return { tradeId: trade.id, agreed: v.ok };
-  await signTrade(trade.id, castId("tunde"));
-  await signTrade(trade.id, castId("ifeoma"));
-  return { tradeId: trade.id, agreed: true };
+  const r = await requestSwap({ circleId: FAMILY_CIRCLE_ID, memberId: castId("tunde"), reason: "School fees are due this month", rationale: opts.rationale });
+  if (!r.agreed || !opts.autoConfirm) return r;
+  await signTrade(r.tradeId, castId("tunde"));
+  await signTrade(r.tradeId, castId("ifeoma"));
+  return r;
 }
 
 /** Step 9: Musa pays his invoice in two parts. */
