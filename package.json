@@ -17,7 +17,9 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/lib/db/migrate.ts",
     "db:seed": "tsx src/lib/db/seed.ts",
-    "db:reset": "tsx src/lib/db/reset.ts && pnpm db:migrate && pnpm db:seed"
+    "db:reset": "tsx src/lib/db/reset.ts && pnpm db:migrate && pnpm db:seed",
+    "eval:agents": "tsx scripts/eval-agents.ts",
+    "record:golden": "tsx scripts/record-golden.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.107",

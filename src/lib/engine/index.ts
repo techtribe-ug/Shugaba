@@ -7,3 +7,4 @@ export * from "./trades";
 export * from "./tick";
 export * from "./webhooks";
 export * from "./market";
+export * from "./member-pay";
