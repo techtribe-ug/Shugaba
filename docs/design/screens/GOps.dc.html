@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Control tower</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Jost:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0070E0}a:hover{color:#003087}
+.num{font-variant-numeric:tabular-nums;font-family:'Jost','Plus Jakarta Sans',sans-serif}
+
+
+
+/* motion pass */
+@property --m-n{syntax:'<integer>';initial-value:0;inherits:false}
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:m-out .18s ease-in both}
+::view-transition-new(root){animation:m-in .32s cubic-bezier(.2,.8,.2,1) both}
+@keyframes m-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes m-out{to{opacity:0;transform:translateY(-4px)}}
+@keyframes m-breathe{0%,100%{scale:1 1}50%{scale:1.025 .985}}
+@keyframes m-look{0%,38%,100%{translate:0 0}42%,58%{translate:2px -.5px}62%,78%{translate:-1.5px 0}}
+@keyframes m-blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.12)}}
+@keyframes m-count{from{--m-n:0}to{--m-n:var(--to)}}
+:where(.m-root > :not(main)), :where(.m-root main > *){animation:m-in .5s cubic-bezier(.2,.8,.2,1) both}
+.m-root main > :nth-child(2){animation-delay:.05s}.m-root main > :nth-child(3){animation-delay:.1s}
+.m-root main > :nth-child(4){animation-delay:.15s}.m-root main > :nth-child(5){animation-delay:.2s}
+.m-root main > :nth-child(6){animation-delay:.25s}.m-root main > :nth-child(n+7){animation-delay:.3s}
+:where(svg[viewBox="-50 -50 100 100"]){animation-name:m-breathe;animation-duration:4.2s;animation-iteration-count:infinite;animation-timing-function:ease-in-out;transform-origin:50% 85%}
+svg[viewBox="-50 -50 100 100"] > circle[fill="#FFFFFF"]{animation:m-blink 5.2s infinite, m-look 9s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.m-count{counter-reset:m var(--m-n)}.m-count::after{content:counter(m)}
+.m-count{animation:m-count 1.1s cubic-bezier(.2,.8,.2,1) .15s both}
+.m-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+button{transition:transform .14s ease, background-color .2s ease, color .2s ease, opacity .2s ease}
+button:active{transform:scale(.97)}
+a{transition:color .2s ease, opacity .2s ease}
+:where(.m-root [style*="width:"][style*="%"]){transition:width .6s cubic-bezier(.2,.8,.2,1)}
+:where(.m-root label *, .m-root [role="switch"] *){transition:transform .22s cubic-bezier(.2,.8,.2,1), background-color .22s ease, opacity .22s ease}
+@keyframes m-react{0%{opacity:0;translate:0 1.5px}4%,16%{opacity:1;translate:0 0}20%,100%{opacity:0;translate:0 1px}}
+.m-r{opacity:0;animation:m-react var(--cy,16s) ease-in-out var(--dl,2s) infinite}
+@media (prefers-reduced-motion: reduce){.m-root,.m-root *,.m-root *::after{animation:none!important;transition:none!important}::view-transition-old(root),::view-transition-new(root){animation:none}.m-count{counter-reset:m var(--to)}}
+/* end motion pass */
+</style>
+</helmet>
+<div class="m-root" style="min-height: 800px; box-sizing: border-box; background: #FFFFFF; color: #18181B; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; padding: 44px 56px">
+<div style="max-width: 1160px; margin: 0 auto; display: flex; gap: 64px; flex-wrap: wrap">
+
+  <main style="flex: 1 1 700px; min-width: 0; display: flex; flex-direction: column; gap: 40px">
+    <header style="display: flex; align-items: center; gap: 10px">
+      <a href="GJudge.dc.html" aria-label="Judge panel" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #18181B"><svg aria-hidden="true" width="26" height="26" viewBox="-50 -50 100 100" style="flex: none"><path d="M-27 -6 C-27 -26 -4 -31 10 -27 C27 -23 31 -6 28 9 C25 25 6 31 -8 29 C-23 27 -27 13 -27 -6 Z" fill="#3B358A"></path><circle cx="-7" cy="-3" r="3.9" fill="#FFFFFF"></circle><circle cx="11" cy="-3" r="3.9" fill="#FFFFFF"></circle></svg>
+      <span style="font-family: Jost, sans-serif; font-size: 20px; font-weight: 700; letter-spacing: -0.5px">shugaba</span></a>
+      <span style="width: 1px; height: 18px; background: #E4E4E7; margin: 0 6px"></span>
+      <span style="font-size: 14px; font-weight: 700; color: #71717A">Control tower</span>
+      <span style="flex: 1"></span>
+      <span class="num" style="font-size: 14px; color: #A1A1AA">Thu 5 Nov · 14:05</span>
+    </header>
+
+    <section aria-label="Today" style="display: flex; flex-wrap: wrap; gap: 0">
+      <div style="flex: 1 1 200px; padding-right: 28px; display: flex; flex-direction: column; gap: 6px"><span class="num" style="font-size: 48px; font-weight: 700; letter-spacing: -1px; line-height: 1"><span class="m-count" style="--to: 14" aria-hidden="true"></span><span class="m-sr">14</span><span style="color: #D4D4D8">/14</span></span><span style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #71717A"><span aria-hidden="true" style="width: 22px; height: 22px; flex: none; border-radius: 999px; background: #16A34A; display: flex; align-items: center; justify-content: center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span>payouts paid in full</span></div>
+      <div style="flex: 1 1 200px; padding: 0 28px; border-left: 1px solid #E4E4E7; display: flex; flex-direction: column; gap: 6px"><span class="num" style="font-size: 48px; font-weight: 700; letter-spacing: -1px; line-height: 1">$1,206</span><span style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #71717A"><span aria-hidden="true" style="width: 22px; height: 22px; flex: none; border-radius: 999px; background: #0070E0; display: flex; align-items: center; justify-content: center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"></path></svg></span>in reserve</span></div>
+      <div style="flex: 1 1 200px; padding-left: 28px; border-left: 1px solid #E4E4E7; display: flex; flex-direction: column; gap: 6px"><span class="num" style="font-size: 48px; font-weight: 700; letter-spacing: -1px; line-height: 1"><span class="m-count" style="--to: 3" aria-hidden="true"></span><span class="m-sr">3</span></span><span style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #71717A"><span aria-hidden="true" style="width: 22px; height: 22px; flex: none; border-radius: 999px; background: #B26A00; display: flex; align-items: center; justify-content: center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3"></path></svg></span>being paid back</span></div>
+    </section>
+
+    <section aria-label="Needs you" style="display: flex; align-items: center; gap: 18px; flex-wrap: wrap; padding: 22px 0; border-top: 1px solid #F4F4F5; border-bottom: 1px solid #F4F4F5">
+      <span style="position: relative; width: 44px; height: 44px; flex: none">
+        <svg role="img" aria-label="Shugaba, guarding" width="44" height="44" viewBox="-50 -50 100 100" style="overflow: visible"><path d="M-27 -6 C-27 -26 -4 -31 10 -27 C27 -23 31 -6 28 9 C25 25 6 31 -8 29 C-23 27 -27 13 -27 -6 Z" fill="#3B358A"></path><rect x="-11.5" y="-4.5" width="9" height="3" rx="1.5" fill="#FFFFFF"></rect><rect x="6.5" y="-4.5" width="9" height="3" rx="1.5" fill="#FFFFFF"></rect><g class="m-r" style="--cy: 12s; --dl: 1.6s"><path d="M-12.0 -11.0 L-2.0 -8.0" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round"></path><path d="M6.0 -8.0 L16.0 -11.0" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round"></path></g></svg>
+        <span style="position: absolute; right: -6px; bottom: -4px; box-shadow: 0 0 0 2px #FFFFFF; border-radius: 999px"><span aria-hidden="true" style="width: 20px; height: 20px; flex: none; border-radius: 999px; background: #C62828; display: flex; align-items: center; justify-content: center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M10 8v8M14 8v8"></path></svg></span></span>
+      </span>
+      <div style="flex: 1 1 320px; display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 17px; font-weight: 800">Holding <span class="num" style="color: #C62828">$300</span> for Kano Traders</span>
+        <span style="font-size: 14px; color: #71717A">PayPal account changed 20 h before payout.</span>
+      </div>
+      <button style="height: 46px; padding: 0 22px; border: 0; border-radius: 12px; background: #18181B; color: #FFFFFF; font: 800 14px 'Plus Jakarta Sans', sans-serif; cursor: pointer">Release</button>
+      <button style="height: 46px; padding: 0 8px; border: 0; background: transparent; color: #71717A; font: 700 14px 'Plus Jakarta Sans', sans-serif; cursor: pointer">Keep holding</button>
+    </section>
+
+    <section aria-label="Circles" style="display: flex; flex-direction: column; gap: 22px">
+      <form style="display: flex; align-items: center; gap: 14px; padding-bottom: 14px; border-bottom: 1.5px solid #18181B">
+        <svg aria-hidden="true" width="30" height="30" viewBox="-50 -50 100 100" style="flex: none; overflow: visible"><path d="M-27 -6 C-27 -26 -4 -31 10 -27 C27 -23 31 -6 28 9 C25 25 6 31 -8 29 C-23 27 -27 13 -27 -6 Z" fill="#3B358A"></path><circle cx="{{eyeX1}}" cy="-5" r="4" fill="#FFFFFF"></circle><circle cx="{{eyeX2}}" cy="-5" r="4" fill="#FFFFFF"></circle></svg>
+        <label for="ask" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Ask Shugaba about your circles</label>
+        <input id="ask" value="{{q}}" placeholder="Ask about any circle" style="flex: 1; min-width: 0; height: 40px; border: 0; padding: 0; font: 600 20px 'Plus Jakarta Sans', sans-serif; color: #18181B; background: transparent; outline: none">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A1A1AA" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 10l-5 5 5 5M20 4v7a4 4 0 0 1-4 4H4"></path></svg>
+      </form>
+      <div style="display: flex; align-items: baseline; gap: 22px; flex-wrap: wrap; min-height: 26px">
+        <sc-for list="{{asks}}" as="k" hint-placeholder-count="4">
+          <button type="button" onClick="{{k.go}}" aria-pressed="{{k.on}}" style="padding: 4px 0; border: 0; background: transparent; font: 700 14px 'Plus Jakarta Sans', sans-serif; color: {{k.fg}}; cursor: pointer">{{k.label}}</button>
+        </sc-for>
+      </div>
+      <sc-if value="{{asked}}" hint-placeholder-val="{{ true }}">
+        <span aria-live="polite" style="font-size: 18px; line-height: 1.4; color: #52525B"><b class="num" style="font-size: 22px; color: {{ansFg}}">{{ansNum}}</b> {{ansText}}</span>
+      </sc-if>
+
+      <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px">
+        <sc-for list="{{circles}}" as="c" hint-placeholder-count="5">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; opacity: {{c.opacity}}; transition: opacity .3s">
+            <svg aria-hidden="true" width="136" height="136" viewBox="-68 -68 136 136" style="overflow: visible">
+              <circle r="48" fill="none" stroke="#F4F4F5" stroke-width="5"></circle>
+              <circle r="48" fill="none" stroke="{{c.color}}" stroke-width="5" stroke-linecap="round" stroke-dasharray="{{c.dash}}" transform="rotate(-90)"></circle>
+              <g transform="translate(0.0 -48.0)"><circle r="10" fill="{{c.f0}}" stroke="#FFFFFF" stroke-width="3"></circle><circle cy="-2.5" r="3.2" fill="{{c.p0}}"></circle><path d="M-5.5 6.5c1-3 3-4.5 5.5-4.5s4.5 1.5 5.5 4.5" fill="{{c.p0}}"></path><circle r="10" fill="none" stroke="{{c.s0}}" stroke-width="1.5" stroke-dasharray="3 2.5"></circle></g><g transform="translate(41.6 -24.0)"><circle r="10" fill="{{c.f1}}" stroke="#FFFFFF" stroke-width="3"></circle><circle cy="-2.5" r="3.2" fill="{{c.p1}}"></circle><path d="M-5.5 6.5c1-3 3-4.5 5.5-4.5s4.5 1.5 5.5 4.5" fill="{{c.p1}}"></path><circle r="10" fill="none" stroke="{{c.s1}}" stroke-width="1.5" stroke-dasharray="3 2.5"></circle></g><g transform="translate(41.6 24.0)"><circle r="10" fill="{{c.f2}}" stroke="#FFFFFF" stroke-width="3"></circle><circle cy="-2.5" r="3.2" fill="{{c.p2}}"></circle><path d="M-5.5 6.5c1-3 3-4.5 5.5-4.5s4.5 1.5 5.5 4.5" fill="{{c.p2}}"></path><circle r="10" fill="none" stroke="{{c.s2}}" stroke-width="1.5" stroke-dasharray="3 2.5"></circle></g><g transform="translate(0.0 48.0)"><circle r="10" fill="{{c.f3}}" stroke="#FFFFFF" stroke-width="3"></circle><circle cy="-2.5" r="3.2" fill="{{c.p3}}"></circle><path d="M-5.5 6.5c1-3 3-4.5 5.5-4.5s4.5 1.5 5.5 4.5" fill="{{c.p3}}"></path><circle r="10" fill="none" stroke="{{c.s3}}" stroke-width="1.5" stroke-dasharray="3 2.5"></circle></g><g transform="translate(-41.6 24.0)"><circle r="10" fill="{{c.f4}}" stroke="#FFFFFF" stroke-width="3"></circle><circle cy="-2.5" r="3.2" fill="{{c.p4}}"></circle><path d="M-5.5 6.5c1-3 3-4.5 5.5-4.5s4.5 1.5 5.5 4.5" fill="{{c.p4}}"></path><circle r="10" fill="none" stroke="{{c.s4}}" stroke-width="1.5" stroke-dasharray="3 2.5"></circle></g><g transform="translate(-41.6 -24.0)"><circle r="10" fill="{{c.f5}}" stroke="#FFFFFF" stroke-width="3"></circle><circle cy="-2.5" r="3.2" fill="{{c.p5}}"></circle><path d="M-5.5 6.5c1-3 3-4.5 5.5-4.5s4.5 1.5 5.5 4.5" fill="{{c.p5}}"></path><circle r="10" fill="none" stroke="{{c.s5}}" stroke-width="1.5" stroke-dasharray="3 2.5"></circle></g>
+              <g transform="scale(.5)"><path d="M-27 -6 C-27 -26 -4 -31 10 -27 C27 -23 31 -6 28 9 C25 25 6 31 -8 29 C-23 27 -27 13 -27 -6 Z" fill="#3B358A"></path><circle cx="-7" cy="{{c.eyeY}}" r="4" fill="#FFFFFF"></circle><circle cx="11" cy="{{c.eyeY}}" r="4" fill="#FFFFFF"></circle></g>
+            </svg>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 2px">
+              <span style="font-size: 14px; font-weight: 700; text-align: center">{{c.name}}</span>
+              <span class="num" style="font-size: 15px; font-weight: 700; color: {{c.fg}}">{{c.value}}× cover</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <span style="font-size: 12px; color: #A1A1AA">Ring shows the pool, up to 4 payouts of cover. Orange members are late.</span>
+    </section>
+  </main>
+
+  <aside aria-label="Shugaba today" style="flex: 0 1 300px; min-width: 0; display: flex; flex-direction: column; padding-top: 64px">
+    <span style="font-size: 13px; font-weight: 700; color: #A1A1AA; padding: 4px 0 18px 0">Shugaba today</span>
+    <sc-for list="{{log}}" as="l" hint-placeholder-count="5">
+      <div style="display: flex; gap: 14px; padding-bottom: 22px; position: relative">
+        <span style="width: 10px; height: 10px; flex: none; margin-top: 5px; border-radius: 999px; background: {{l.dot}}; box-shadow: 0 0 0 4px #FFFFFF; position: relative; z-index: 1"></span>
+        <div style="display: flex; flex-direction: column; gap: 2px">
+          <span style="font-size: 14px; line-height: 1.4">{{l.text}}</span>
+          <span class="num" style="font-size: 12px; color: #A1A1AA">{{l.t}} · <a href="#" style="text-decoration: none">{{l.rule}}</a></span>
+        </div>
+      </div>
+    </sc-for>
+  </aside>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+  var self = this;
+  var qi = this.state && this.state.q !== undefined ? this.state.q : 0, asked = qi !== null;
+  var C = 2 * Math.PI * 48;
+  var data = [['Family Circle', 2.6, [1, 1, 1, 1, 1, 0]], ['Abuja Teachers', 0.4, [1, 1, 0, 1, 0, 1]], ['Kano Traders', 1.2, [1, 1, 1, 1, 1, 1]], ['Zaria Market', 3.1, [1, 1, 1, 1, 1, 1]], ['Jos Nurses', 1.7, [1, 0, 1, 1, 1, 1]]];
+  var low = data.filter(function (d) { return d[1] < 2; }).length;
+  var circles = data.map(function (d) {
+    var f = Math.min(d[1] / 4, 1), match = qi === 0 ? d[1] < 2 : qi === 1 ? d[2].indexOf(0) >= 0 : qi === 2 ? d[0] === 'Kano Traders' : true;
+    var color = d[1] < 1 ? '#C62828' : '#18181B';
+    var o = { name: d[0], value: d[1].toFixed(1), dash: (C * f).toFixed(1) + ' ' + C.toFixed(1), color: color, fg: d[1] < 1 ? '#C62828' : '#18181B', opacity: asked && !match ? '0.3' : '1' };
+    o.eyeY = d[1] < 1 ? 1 : -3;
+    var nl = d[2].filter(function (x) { return !x; }).length; o.late = nl ? nl + ' late' : '';
+    d[2].forEach(function (ok, i) { o['f' + i] = ok ? '#E4E4E7' : '#FFFFFF'; o['p' + i] = ok ? '#A1A1AA' : '#B26A00'; o['s' + i] = ok ? 'none' : '#B26A00'; });
+    return o;
+  });
+  var log = [
+    ['14:02', 'Paid Ngozi $300 in full', 'payout', '#16A34A'],
+    ['14:01', 'Covered Musa’s $50 from the pool', 'cover', '#0070E0'],
+    ['14:01', 'Sent Musa a $50 invoice', 'recovery', '#D4D4D8'],
+    ['11:40', 'Held Kano Traders payout', 'account check', '#C62828'],
+    ['09:12', 'Offered Musa a split payment', 'grace', '#D4D4D8']
+  ].map(function (l) { return { t: l[0], text: l[1], rule: l[2], dot: l[3] }; });
+  var Q = [
+    ['Low on cover', 'Which circles have less than 2 payouts of cover?', low + ' circles', 'have less than 2 payouts in the pool. Abuja Teachers is lowest.', '#18181B'],
+    ['Someone late', 'Who is late right now?', '3 circles', 'have someone late. Abuja Teachers has two.', '#B26A00'],
+    ['On hold', 'Which payouts are on hold?', '$300', 'held for Kano Traders. PayPal account changed.', '#C62828'],
+    ['All circles', '', '', '', '']
+  ];
+  var cur = asked ? Q[qi] : Q[3];
+  return {
+    circles: circles, log: log, asked: asked,
+    q: cur[1], ansNum: cur[2], ansText: cur[3], ansFg: cur[4],
+    eyeX1: asked ? -4 : -7, eyeX2: asked ? 14 : 11,
+    asks: Q.map(function (x, i) { var sel = i === 3 ? !asked : qi === i; return { label: x[0], on: sel ? 'true' : 'false', fg: sel ? '#18181B' : '#A1A1AA', go: function () { self.setState({ q: i === 3 ? null : i }); } }; })
+  };
+}
+}
+</script>
+</body>
+</html>

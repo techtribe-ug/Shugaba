@@ -26,6 +26,16 @@ export function getPaymentProvider(env: Record<string, string | undefined> = pro
 }
 
 export function getMockProvider(): MockProvider | null {
+  // Compare by name, not instanceof: the worker and the request handlers can load separate copies of the class.
   const p = getPaymentProvider();
-  return p instanceof MockProvider ? p : null;
+  return p.name === "mock" ? (p as MockProvider) : null;
+}
+
+/** Demo reset: a fresh mock with no remembered results or forced failures. Keeps the worker's event sink. */
+export function resetMockProvider() {
+  const old = getMockProvider();
+  if (!old) return;
+  const fresh = new MockProvider();
+  fresh.setSink((old as unknown as { sink: Parameters<MockProvider["setSink"]>[0] }).sink);
+  g.__shugabaPayments = fresh;
 }

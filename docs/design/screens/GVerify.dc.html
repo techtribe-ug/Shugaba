@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Public ledger</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Jost:wght@500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0070E0}a:hover{color:#003087}
+.num{font-variant-numeric:tabular-nums;font-family:'Jost','Plus Jakarta Sans',sans-serif}
+.mono{font-family:'JetBrains Mono',monospace}
+button{font-family:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid #0070E0;outline-offset:2px}
+.row:hover{background:#FAFAFA}
+.tick{transition:opacity .25s ease, transform .25s ease}
+.bar{transition:width 1.4s cubic-bezier(.4,0,.2,1)}
+@media (prefers-reduced-motion: reduce){.tick,.bar{transition:none}}
+
+
+
+/* motion pass */
+@property --m-n{syntax:'<integer>';initial-value:0;inherits:false}
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:m-out .18s ease-in both}
+::view-transition-new(root){animation:m-in .32s cubic-bezier(.2,.8,.2,1) both}
+@keyframes m-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes m-out{to{opacity:0;transform:translateY(-4px)}}
+@keyframes m-breathe{0%,100%{scale:1 1}50%{scale:1.025 .985}}
+@keyframes m-look{0%,38%,100%{translate:0 0}42%,58%{translate:2px -.5px}62%,78%{translate:-1.5px 0}}
+@keyframes m-blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.12)}}
+@keyframes m-count{from{--m-n:0}to{--m-n:var(--to)}}
+:where(.m-root > :not(main)), :where(.m-root main > *){animation:m-in .5s cubic-bezier(.2,.8,.2,1) both}
+.m-root main > :nth-child(2){animation-delay:.05s}.m-root main > :nth-child(3){animation-delay:.1s}
+.m-root main > :nth-child(4){animation-delay:.15s}.m-root main > :nth-child(5){animation-delay:.2s}
+.m-root main > :nth-child(6){animation-delay:.25s}.m-root main > :nth-child(n+7){animation-delay:.3s}
+:where(svg[viewBox="-50 -50 100 100"]){animation-name:m-breathe;animation-duration:4.2s;animation-iteration-count:infinite;animation-timing-function:ease-in-out;transform-origin:50% 85%}
+svg[viewBox="-50 -50 100 100"] > circle[fill="#FFFFFF"]{animation:m-blink 5.2s infinite, m-look 9s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.m-count{counter-reset:m var(--m-n)}.m-count::after{content:counter(m)}
+.m-count{animation:m-count 1.1s cubic-bezier(.2,.8,.2,1) .15s both}
+.m-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+button{transition:transform .14s ease, background-color .2s ease, color .2s ease, opacity .2s ease}
+button:active{transform:scale(.97)}
+a{transition:color .2s ease, opacity .2s ease}
+:where(.m-root [style*="width:"][style*="%"]){transition:width .6s cubic-bezier(.2,.8,.2,1)}
+:where(.m-root label *, .m-root [role="switch"] *){transition:transform .22s cubic-bezier(.2,.8,.2,1), background-color .22s ease, opacity .22s ease}
+@keyframes m-react{0%{opacity:0;translate:0 1.5px}4%,16%{opacity:1;translate:0 0}20%,100%{opacity:0;translate:0 1px}}
+.m-r{opacity:0;animation:m-react var(--cy,16s) ease-in-out var(--dl,2s) infinite}
+@media (prefers-reduced-motion: reduce){.m-root,.m-root *,.m-root *::after{animation:none!important;transition:none!important}::view-transition-old(root),::view-transition-new(root){animation:none}.m-count{counter-reset:m var(--to)}}
+/* end motion pass */
+</style>
+</helmet>
+<div class="m-root" style="width: 1280px; min-height: 960px; box-sizing: border-box; background: #FFFFFF; color: #18181B; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; padding: 44px 0">
+<div style="max-width: 880px; margin: 0 auto; display: flex; flex-direction: column">
+
+  <header style="display: flex; align-items: center; gap: 10px"><a href="GHome.dc.html" aria-label="Shugaba home" style="display: flex; align-items: center; gap: 9px; text-decoration: none; color: #18181B"><svg aria-hidden="true" width="26" height="26" viewBox="-50 -50 100 100" style="flex: none"><path d="M-27 -6 C-27 -26 -4 -31 10 -27 C27 -23 31 -6 28 9 C25 25 6 31 -8 29 C-23 27 -27 13 -27 -6 Z" fill="#3B358A"></path><circle cx="-7" cy="-3" r="3.9" fill="#FFFFFF"></circle><circle cx="11" cy="-3" r="3.9" fill="#FFFFFF"></circle><g class="m-r" style="--cy: 12s; --dl: 1.6s"><circle cx="-7.0" cy="-3.0" r="7.4" fill="none" stroke="#FFFFFF" stroke-width="3.0"></circle><circle cx="11.0" cy="-3.0" r="7.4" fill="none" stroke="#FFFFFF" stroke-width="3.0"></circle><path d="M0.4 -4.0 Q2.0 -7.2 3.6 -4.0" fill="none" stroke="#FFFFFF" stroke-width="3.0"></path></g></svg><span style="font-family: Jost, sans-serif; font-size: 20px; font-weight: 700; letter-spacing: -0.5px; line-height: 1">shugaba</span></a><span aria-hidden="true" style="width: 1px; height: 18px; background: #E4E4E7; margin: 0 6px"></span><span style="font-size: 14px; font-weight: 700; color: #71717A">Family Circle · public ledger</span></header>
+
+  <h1 class="num" style="margin: 32px 0 0 0; font-size: 52px; font-weight: 700; letter-spacing: -1.5px; line-height: 1.05">Every dollar, on the record.</h1>
+  <p style="margin: 12px 0 0 0; font-size: 17px; color: #71717A">Anyone can check it. Names show as initials.</p>
+
+  <section aria-label="Totals" style="margin-top: 36px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px"><div style="display: flex; flex-direction: column; gap: 6px"><span class="num" style="font-size: 34px; font-weight: 700; letter-spacing: -0.5px; line-height: 1; color: #18181B">$<span class="m-count" style="--to: 550" aria-hidden="true"></span><span class="m-sr">550</span></span><span style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #71717A"><span aria-hidden="true" style="width: 20px; height: 20px; border-radius: 999px; background: #16A34A; display: flex; align-items: center; justify-content: center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"></path></svg></span>paid in</span></div><div style="display: flex; flex-direction: column; gap: 6px"><span class="num" style="font-size: 34px; font-weight: 700; letter-spacing: -0.5px; line-height: 1; color: #18181B">$<span class="m-count" style="--to: 600" aria-hidden="true"></span><span class="m-sr">600</span></span><span style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #71717A"><span aria-hidden="true" style="width: 20px; height: 20px; border-radius: 999px; background: #18181B; display: flex; align-items: center; justify-content: center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h14M13 6l6 6-6 6"></path></svg></span>paid out</span></div><div style="display: flex; flex-direction: column; gap: 6px"><span class="num" style="font-size: 34px; font-weight: 700; letter-spacing: -0.5px; line-height: 1; color: #0070E0">$<span class="m-count" style="--to: 50" aria-hidden="true"></span><span class="m-sr">50</span></span><span style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #71717A"><span aria-hidden="true" style="width: 20px; height: 20px; border-radius: 999px; background: #0070E0; display: flex; align-items: center; justify-content: center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"></path></svg></span>covered by the pool</span></div></section>
+
+  <section aria-label="Check" style="margin-top: 36px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; align-items: center; gap: 20px; min-height: 56px">
+      <sc-if value="{{idle}}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{verify}}" style="height: 56px; padding: 0 30px; border: 0; border-radius: 14px; background: #18181B; color: #FFFFFF; font-size: 16px; font-weight: 800">Check the ledger</button>
+        <span style="font-size: 14px; color: #71717A">Compares all 147 entries with PayPal.</span>
+      </sc-if>
+      <sc-if value="{{verified}}" hint-placeholder-val="{{ false }}">
+        <span role="status" style="display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 800; color: #16A34A">
+          <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>All 147 match. Nothing was changed.</span>
+        <button onClick="{{reset}}" style="height: 40px; padding: 0; border: 0; background: transparent; color: #A1A1AA; font-size: 14px; font-weight: 700">Check again</button>
+      </sc-if>
+    </div>
+    <span aria-hidden="true" style="height: 3px; border-radius: 2px; background: #F4F4F5; overflow: hidden; display: block"><span class="bar" style="display: block; height: 100%; width: {{barW}}; background: #16A34A"></span></span>
+  </section>
+
+  <section aria-label="Entries" style="margin-top: 24px; display: flex; flex-direction: column">
+    <sc-for list="{{rows}}" as="e" hint-placeholder-count="7">
+      <button class="row" onClick="{{e.go}}" aria-expanded="{{e.open}}" style="display: grid; grid-template-columns: 32px minmax(0, 1fr) 110px 24px; gap: 16px; align-items: center; padding: 14px 8px; margin: 0 -8px; border: 0; border-top: 1px solid #F4F4F5; background: transparent; color: #18181B; text-align: left">
+        <span aria-hidden="true" style="width: 28px; height: 28px; border-radius: 999px; background: {{e.bg}}; display: flex; align-items: center; justify-content: center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{e.icon}}"></path></svg></span>
+        <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+          <span style="font-size: 16px; font-weight: 700">{{e.text}}</span>
+          <span class="num" style="font-size: 13px; color: #A1A1AA">{{e.when}}</span>
+        </span>
+        <span class="num" style="font-size: 18px; font-weight: 700; text-align: right; color: {{e.amtFg}}">{{e.amount}}</span>
+        <svg class="tick" aria-label="{{e.tickLabel}}" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="opacity: {{e.tick}}; transition-delay: {{e.delay}}"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+      </button>
+      <sc-if value="{{e.isOpen}}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; gap: 32px; padding: 0 0 16px 48px; font-size: 13px; color: #71717A">
+          <span>PayPal ref <span class="mono" style="color: #18181B">{{e.ref}}</span></span>
+          <span>Entry <span class="mono" style="color: #18181B">#{{e.seq}}</span></span>
+          <a href="#" style="text-decoration: none; font-weight: 700">View on PayPal ↗</a>
+        </div>
+      </sc-if>
+    </sc-for>
+  </section>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":960}}'>
+class Component extends DCLogic {
+renderVals() {
+  var self = this, st = this.state || {}, v = !!st.verified, open = st.open === undefined ? -1 : st.open;
+  var K = {
+    out: ['M4 12h14M13 6l6 6-6 6', '#18181B'], inn: ['M12 19V5M6 11l6-6 6 6', '#16A34A'], cover: ['M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z', '#0070E0'], late: ['M12 7v5l3 2M12 3a9 9 0 1 0 .01 0', '#B26A00'], fee: ['M12 19V5M6 11l6-6 6 6', '#A1A1AA']
+  };
+  var E = [
+    ['0147', 'out', 'N. got the payout', 'Thu 5 Nov · 14:02', '$300', '#16A34A', '7A20K31BF'],
+    ['0146', 'cover', 'Pool covered M.', 'Thu 5 Nov · 14:01', '$50', '#0070E0', 'E8B55D12X'],
+    ['0145', 'late', 'M.’s payment didn’t go through', 'Thu 5 Nov · 09:00', '$0', '#A1A1AA', '–'],
+    ['0144', 'inn', 'S. paid', 'Wed 4 Nov · 18:40', '$51', '#18181B', '3FD29E41A'],
+    ['0143', 'inn', 'T. paid', 'Wed 4 Nov · 12:15', '$51', '#18181B', '02FEA6C4B'],
+    ['0142', 'inn', 'I. paid', 'Tue 3 Nov · 20:03', '$51', '#18181B', 'B9A3E510C'],
+    ['0141', 'fee', 'Protection fees to the pool', 'Tue 3 Nov · 20:03', '$6', '#71717A', 'C4D177FAD']
+  ];
+  return {
+    idle: !v, verified: v, barW: v ? '100%' : '0%',
+    verify: function () { self.setState({ verified: true }); },
+    reset: function () { self.setState({ verified: false }); },
+    rows: E.map(function (e, i) {
+      var k = K[e[1]], isOpen = open === i;
+      return { seq: e[0], icon: k[0], bg: k[1], text: e[2], when: e[3], amount: e[4], amtFg: e[5], ref: e[6],
+        tick: v ? '1' : '0', delay: v ? (200 + i * 160) + 'ms' : '0ms', tickLabel: v ? 'Matches PayPal' : 'Not checked',
+        open: isOpen ? 'true' : 'false', isOpen: isOpen, go: function () { self.setState({ open: isOpen ? -1 : i }); } };
+    })
+  };
+}
+}
+</script>
+</body>
+</html>

@@ -95,6 +95,13 @@ export async function advanceGolden(): Promise<string> {
     await runTundeSwap({ autoConfirm: true });
     return "Tunde and Ifeoma swapped turns";
   }
+  // After the swap, Musa clears his invoice in two parts.
+  const open = st.recoveries?.find((r) => r.status === "OPEN" || r.status === "PARTIAL");
+  if (st.trades?.length && open) {
+    const part = open.status === "OPEN" ? 1 : 2;
+    await payMusaInvoice(part);
+    return part === 1 ? "Musa paid half his invoice" : "Musa paid the rest; the pool is whole again";
+  }
   return advanceToNextDue();
 }
 

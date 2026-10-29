@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Chat with Shugaba</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Jost:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0070E0}a:hover{color:#003087}
+.big{font-family:'Jost','Plus Jakarta Sans',sans-serif}
+.num{font-variant-numeric:tabular-nums;font-family:'Jost','Plus Jakarta Sans',sans-serif}
+button{font-family:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible{outline:2px solid #0070E0;outline-offset:2px}
+@keyframes rise{from{opacity:0;transform:translateY(8px);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+.rise{animation:rise .45s ease-out both}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{animation:spin .9s linear infinite;transform-origin:12px 12px}
+@keyframes shimmer{to{background-position:-200% 0}}
+.working{background:linear-gradient(90deg,#71717A 0 40%,#D4D4D8 50%,#71717A 60% 100%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shimmer 1.6s linear infinite}
+@keyframes hop{0%,100%{transform:none}40%{transform:translateY(-6px)}}
+.hop{animation:hop .5s ease-out 2}
+@keyframes blink{0%,92%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+.eye{animation:blink 4.5s infinite;transform-box:fill-box;transform-origin:center}
+@media (prefers-reduced-motion: reduce){.rise,.spin,.working,.hop,.eye{animation:none}}
+
+
+
+/* motion pass */
+@property --m-n{syntax:'<integer>';initial-value:0;inherits:false}
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:m-out .18s ease-in both}
+::view-transition-new(root){animation:m-in .32s cubic-bezier(.2,.8,.2,1) both}
+@keyframes m-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes m-out{to{opacity:0;transform:translateY(-4px)}}
+@keyframes m-breathe{0%,100%{scale:1 1}50%{scale:1.025 .985}}
+@keyframes m-look{0%,38%,100%{translate:0 0}42%,58%{translate:2px -.5px}62%,78%{translate:-1.5px 0}}
+@keyframes m-blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.12)}}
+@keyframes m-count{from{--m-n:0}to{--m-n:var(--to)}}
+:where(.m-root > :not(main)), :where(.m-root main > *){animation:m-in .5s cubic-bezier(.2,.8,.2,1) both}
+.m-root main > :nth-child(2){animation-delay:.05s}.m-root main > :nth-child(3){animation-delay:.1s}
+.m-root main > :nth-child(4){animation-delay:.15s}.m-root main > :nth-child(5){animation-delay:.2s}
+.m-root main > :nth-child(6){animation-delay:.25s}.m-root main > :nth-child(n+7){animation-delay:.3s}
+:where(svg[viewBox="-50 -50 100 100"]){animation-name:m-breathe;animation-duration:4.2s;animation-iteration-count:infinite;animation-timing-function:ease-in-out;transform-origin:50% 85%}
+svg[viewBox="-50 -50 100 100"] > circle[fill="#FFFFFF"]{animation:m-blink 5.2s infinite, m-look 9s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.m-count{counter-reset:m var(--m-n)}.m-count::after{content:counter(m)}
+.m-count{animation:m-count 1.1s cubic-bezier(.2,.8,.2,1) .15s both}
+.m-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+button{transition:transform .14s ease, background-color .2s ease, color .2s ease, opacity .2s ease}
+button:active{transform:scale(.97)}
+a{transition:color .2s ease, opacity .2s ease}
+:where(.m-root [style*="width:"][style*="%"]){transition:width .6s cubic-bezier(.2,.8,.2,1)}
+:where(.m-root label *, .m-root [role="switch"] *){transition:transform .22s cubic-bezier(.2,.8,.2,1), background-color .22s ease, opacity .22s ease}
+@keyframes m-react{0%{opacity:0;translate:0 1.5px}4%,16%{opacity:1;translate:0 0}20%,100%{opacity:0;translate:0 1px}}
+.m-r{opacity:0;animation:m-react var(--cy,16s) ease-in-out var(--dl,2s) infinite}
+@media (prefers-reduced-motion: reduce){.m-root,.m-root *,.m-root *::after{animation:none!important;transition:none!important}::view-transition-old(root),::view-transition-new(root){animation:none}.m-count{counter-reset:m var(--to)}}
+/* end motion pass */
+</style>
+</helmet>
+<div class="m-root" style="width: 390px; height: 844px; box-sizing: border-box; background: #FFFFFF; color: #18181B; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+  <header style="display: flex; align-items: center; gap: 10px; padding: 14px 16px 10px 8px">
+    <a href="GHome.dc.html" aria-label="Back" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #18181B">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
+    </a>
+    <svg class="{{hopClass}}" role="img" aria-label="Shugaba, {{mood}}" width="40" height="40" viewBox="-50 -50 100 100" style="overflow: visible"><path d="M-27 -6 C-27 -26 -4 -31 10 -27 C27 -23 31 -6 28 9 C25 25 6 31 -8 29 C-23 27 -27 13 -27 -6 Z" fill="#3B358A"></path>
+      <circle class="eye" cx="{{ex1}}" cy="{{ey}}" r="{{er}}" fill="#FFFFFF"></circle><circle class="eye" cx="{{ex2}}" cy="{{ey}}" r="{{er}}" fill="#FFFFFF"></circle></svg>
+    <div style="display: flex; flex-direction: column; gap: 1px">
+      <span style="font-size: 16px; font-weight: 800">Shugaba</span>
+      <span aria-live="polite" class="{{statusClass}}" style="font-size: 13px; font-weight: 600; color: {{statusFg}}">{{status}}</span>
+    </div>
+  </header>
+
+  <main style="flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: 14px; padding: 8px 20px 8px 16px; overflow: hidden">
+
+    <div style="display: flex; flex-direction: column; gap: 8px; opacity: .55">
+      <span class="num" style="align-self: center; font-size: 12px; color: #A1A1AA">Yesterday</span>
+      <p style="margin: 0; align-self: flex-end; max-width: 80%; font-size: 15px; color: #52525B; text-align: right">Send Ngozi’s payout to my brother.</p>
+      <div style="display: flex; gap: 10px"><svg aria-hidden="true" width="22" height="22" viewBox="-50 -50 100 100" style="flex: none; overflow: visible; margin-top: 4px"><path d="M-27 -6 C-27 -26 -4 -31 10 -27 C27 -23 31 -6 28 9 C25 25 6 31 -8 29 C-23 27 -27 13 -27 -6 Z" fill="#3B358A"></path><circle cx="-7" cy="-3" r="4" fill="#FFFFFF"></circle><circle cx="11" cy="-3" r="4" fill="#FFFFFF"></circle><g class="m-r" style="--cy: 16s; --dl: 1.6s"><circle cx="-7.0" cy="-3.0" r="7.6" fill="none" stroke="#FFFFFF" stroke-width="3.6"></circle><circle cx="11.0" cy="-3.0" r="7.6" fill="none" stroke="#FFFFFF" stroke-width="3.6"></circle><path d="M0.6 -4.0 Q2.0 -7.3 3.4 -4.0" fill="none" stroke="#FFFFFF" stroke-width="3.6"></path></g></svg>
+        <p style="margin: 0; font-size: 15px; line-height: 1.45">I can’t: payouts only go to each member’s own PayPal. <a href="GRules.dc.html" style="text-decoration: none; font-weight: 700">Rule 4</a>. I can ask Ngozi to send it herself.</p>
+      </div>
+    </div>
+
+    <span class="num" style="align-self: center; font-size: 12px; color: #A1A1AA; padding-top: 6px">Today 09:14</span>
+
+    <div style="display: flex; gap: 10px"><svg aria-hidden="true" width="22" height="22" viewBox="-50 -50 100 100" style="flex: none; overflow: visible; margin-top: 4px"><path d="M-27 -6 C-27 -26 -4 -31 10 -27 C27 -23 31 -6 28 9 C25 25 6 31 -8 29 C-23 27 -27 13 -27 -6 Z" fill="#3B358A"></path><circle cx="-7" cy="0" r="4" fill="#FFFFFF"></circle><circle cx="11" cy="0" r="4" fill="#FFFFFF"></circle></svg>
+      <div style="display: flex; flex-direction: column; gap: 8px; min-width: 0">
+        <p class="big" style="margin: 0; font-size: 24px; font-weight: 600; line-height: 1.2; letter-spacing: -0.4px">Sannu, Musa. Your $51 didn’t go through.</p>
+        <p style="margin: 0; display: flex; align-items: center; gap: 6px; font-size: 13px; color: #71717A">
+          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v5l3 2M12 3a9 9 0 1 0 .01 0"></path></svg>Last time you split it and paid Saturday.</p>
+      </div>
+    </div>
+
+    <sc-if value="{{atOffer}}" hint-placeholder-val="{{ true }}">
+      <div class="rise" style="display: flex; align-items: center; gap: 18px; padding-left: 32px">
+        <button onClick="{{split}}" style="height: 44px; padding: 0 20px; border: 0; border-radius: 12px; background: #18181B; color: #FFFFFF; font-size: 15px; font-weight: 800">Split it again</button>
+        <a href="GMoney.dc.html" style="text-decoration: none; box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: 5px; height: 44px; padding: 0; border: 0; background: transparent; color: #18181B; font-size: 15px; font-weight: 700">Pay $51</a>
+        <button style="height: 44px; padding: 0; border: 0; background: transparent; color: #71717A; font-size: 15px; font-weight: 700">Need a day</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{pastOffer}}" hint-placeholder-val="{{ false }}">
+      <p class="rise" style="margin: 0; align-self: flex-end; font-size: 15px; color: #52525B">Split it again</p>
+      <div class="rise" style="display: flex; gap: 10px; animation-delay: .15s"><svg aria-hidden="true" width="22" height="22" viewBox="-50 -50 100 100" style="flex: none; overflow: visible; margin-top: 4px"><path d="M-27 -6 C-27 -26 -4 -31 10 -27 C27 -23 31 -6 28 9 C25 25 6 31 -8 29 C-23 27 -27 13 -27 -6 Z" fill="#3B358A"></path><circle cx="-5" cy="-3" r="4" fill="#FFFFFF"></circle><circle cx="13" cy="-3" r="4" fill="#FFFFFF"></circle><g class="m-r" style="--cy: 16s; --dl: 1.6s"><path d="M-10.4 -10.6 Q-5.0 -14.4 0.4 -11.1" fill="none" stroke="#FFFFFF" stroke-width="5.2" stroke-linecap="round"></path><path d="M7.6 -10.6 Q13.0 -14.4 18.4 -11.1" fill="none" stroke="#FFFFFF" stroke-width="5.2" stroke-linecap="round"></path></g></svg>
+        <section aria-label="Plan" style="flex: 1; display: flex; flex-direction: column">
+          <span style="font-size: 15px; padding-bottom: 6px">Here’s the plan:</span>
+          <sc-for list="{{plan}}" as="p" hint-placeholder-count="3">
+            <div style="display: flex; align-items: center; gap: 12px; padding: 11px 0; border-top: 1px solid #F4F4F5">
+              <span style="width: 22px; height: 22px; flex: none; border-radius: 999px; background: {{p.bg}}; box-shadow: {{p.sh}}; display: flex; align-items: center; justify-content: center">
+                <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" style="display: {{p.ck}}"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+                <svg class="spin" aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#18181B" stroke-width="2.4" stroke-linecap="round" style="display: {{p.sp}}"><path d="M12 3a9 9 0 0 1 9 9"></path></svg>
+              </span>
+              <span style="flex: 1; font-size: 15px; font-weight: 600; color: {{p.fg}}">{{p.text}}</span>
+              <span class="num" style="font-size: 16px; font-weight: 700; color: {{p.amtFg}}">{{p.amt}}</span>
+            </div>
+          </sc-for>
+        </section>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{atConfirm}}" hint-placeholder-val="{{ false }}">
+      <button class="rise" onClick="{{pay}}" style="margin-left: 32px; height: 54px; border: 0; border-radius: 14px; background: #18181B; color: #FFFFFF; font-size: 16px; font-weight: 700; animation-delay: .3s">Pay $25.50 with <span style="font-weight: 800; font-style: italic">PayPal</span></button>
+    </sc-if>
+
+    <sc-if value="{{done}}" hint-placeholder-val="{{ false }}">
+      <div class="rise" style="display: flex; align-items: baseline; gap: 10px; padding-left: 32px">
+        <span style="flex: 1; font-size: 15px; line-height: 1.4">Done. Your score is safe. I’ll remind you Friday.</span>
+        <button style="height: 36px; padding: 0; border: 0; background: transparent; color: #71717A; font-size: 14px; font-weight: 700; white-space: nowrap">Move Saturday</button>
+      </div>
+    </sc-if>
+  </main>
+
+  <footer style="padding: 10px 16px 24px 16px; display: flex; gap: 10px; align-items: center">
+    <label for="ask" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Ask Shugaba</label>
+    <input id="ask" placeholder="{{hint}}" style="flex: 1; min-width: 0; height: 52px; box-sizing: border-box; border: 0; border-bottom: 1.5px solid #18181B; padding: 0 2px; font: 500 16px 'Plus Jakarta Sans', sans-serif; background: transparent; color: #18181B; outline: none">
+    <button aria-label="Speak to Shugaba" style="width: 52px; height: 52px; border: 0; border-radius: 999px; background: #18181B; display: flex; align-items: center; justify-content: center">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg>
+    </button>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+  var self = this, step = (this.state && this.state.step) || 0;
+  function to(n) { return function () { self.setState({ step: n }); if (n === 2) setTimeout(function () { self.setState({ step: 3 }); }, 1800); }; }
+  // step 0 offer, 1 plan shown, 2 paying, 3 done
+  var row = function (text, amt, st) {
+    var done = st === 'done', run = st === 'run';
+    return { text: text, amt: amt, ck: done ? 'block' : 'none', sp: run ? 'block' : 'none',
+      bg: done ? '#16A34A' : '#FFFFFF', sh: done || run ? 'none' : 'inset 0 0 0 1.5px #D4D4D8',
+      fg: done ? '#18181B' : '#52525B', amtFg: done && amt ? '#16A34A' : '#18181B' };
+  };
+  var plan = [
+    row('Pay half now', '$25.50', step >= 3 ? 'done' : step === 2 ? 'run' : 'todo'),
+    row('Pay half Sat 7 Nov', '$25.50', 'todo'),
+    row('Keep your Circle Score', '', step >= 3 ? 'done' : 'todo')
+  ];
+  var M = [
+    ['concerned', 'Looking at your payment', '#71717A', '', -7, 11, 0, 4],
+    ['thinking', 'Waiting for you', '#71717A', '', -5, 13, -4, 4],
+    ['guarding', 'Paying with PayPal…', '#71717A', 'working', -6, 12, -2, 3.2],
+    ['pleased', 'All good', '#16A34A', '', -7, 11, -4, 4.4]
+  ][step];
+  return {
+    step: step, plan: plan, atOffer: step === 0, pastOffer: step > 0, atConfirm: step === 1, done: step === 3,
+    mood: M[0], status: M[1], statusFg: M[2], statusClass: M[3], ex1: M[4], ex2: M[5], ey: M[6], er: M[7],
+    hopClass: step === 3 ? 'hop' : '',
+    hint: step === 3 ? 'Ask about Saturday' : 'Ask or say anything',
+    split: to(1), pay: to(2)
+  };
+}
+}
+</script>
+</body>
+</html>

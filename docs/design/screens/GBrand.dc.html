@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Final brand</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&amp;family=Jost:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}
+
+
+/* motion pass */
+@property --m-n{syntax:'<integer>';initial-value:0;inherits:false}
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:m-out .18s ease-in both}
+::view-transition-new(root){animation:m-in .32s cubic-bezier(.2,.8,.2,1) both}
+@keyframes m-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes m-out{to{opacity:0;transform:translateY(-4px)}}
+@keyframes m-breathe{0%,100%{scale:1 1}50%{scale:1.025 .985}}
+@keyframes m-look{0%,38%,100%{translate:0 0}42%,58%{translate:2px -.5px}62%,78%{translate:-1.5px 0}}
+@keyframes m-blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.12)}}
+@keyframes m-count{from{--m-n:0}to{--m-n:var(--to)}}
+:where(.m-root > :not(main)), :where(.m-root main > *){animation:m-in .5s cubic-bezier(.2,.8,.2,1) both}
+.m-root main > :nth-child(2){animation-delay:.05s}.m-root main > :nth-child(3){animation-delay:.1s}
+.m-root main > :nth-child(4){animation-delay:.15s}.m-root main > :nth-child(5){animation-delay:.2s}
+.m-root main > :nth-child(6){animation-delay:.25s}.m-root main > :nth-child(n+7){animation-delay:.3s}
+:where(svg[viewBox="-50 -50 100 100"]){animation-name:m-breathe;animation-duration:4.2s;animation-iteration-count:infinite;animation-timing-function:ease-in-out;transform-origin:50% 85%}
+svg[viewBox="-50 -50 100 100"] > circle[fill="#FFFFFF"]{animation:m-blink 5.2s infinite, m-look 9s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.m-count{counter-reset:m var(--m-n)}.m-count::after{content:counter(m)}
+.m-count{animation:m-count 1.1s cubic-bezier(.2,.8,.2,1) .15s both}
+.m-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+button{transition:transform .14s ease, background-color .2s ease, color .2s ease, opacity .2s ease}
+button:active{transform:scale(.97)}
+a{transition:color .2s ease, opacity .2s ease}
+:where(.m-root [style*="width:"][style*="%"]){transition:width .6s cubic-bezier(.2,.8,.2,1)}
+:where(.m-root label *, .m-root [role="switch"] *){transition:transform .22s cubic-bezier(.2,.8,.2,1), background-color .22s ease, opacity .22s ease}
+@keyframes m-react{0%{opacity:0;translate:0 1.5px}4%,16%{opacity:1;translate:0 0}20%,100%{opacity:0;translate:0 1px}}
+.m-r{opacity:0;animation:m-react var(--cy,16s) ease-in-out var(--dl,2s) infinite}
+@media (prefers-reduced-motion: reduce){.m-root,.m-root *,.m-root *::after{animation:none!important;transition:none!important}::view-transition-old(root),::view-transition-new(root){animation:none}.m-count{counter-reset:m var(--to)}}
+/* end motion pass */
+</style>
+</helmet>
+<div class="m-root" style="width: 1280px; height: 420px; box-sizing: border-box; background: #FFFFFF; color: #18181B; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; padding: 56px 64px; display: grid; grid-template-columns: 1.3fr 1fr; gap: 72px">
+  <section style="display: flex; flex-direction: column; gap: 40px">
+    <div style="display: flex; align-items: center; gap: 16px"><svg aria-hidden="true" width="84" height="84" viewBox="-50 -50 100 100" style="flex: none; overflow: visible"><path d="M-27 -6 C-27 -26 -4 -31 10 -27 C27 -23 31 -6 28 9 C25 25 6 31 -8 29 C-23 27 -27 13 -27 -6 Z" fill="#3B358A"></path><circle cx="-7" cy="-3" r="3.7" fill="#FFFFFF"></circle><circle cx="11" cy="-3" r="3.7" fill="#FFFFFF"></circle></svg><span style="font-family: Jost, sans-serif; font-size: 68px; font-weight: 700; letter-spacing: -1.55px; color: #18181B; line-height: 1">shugaba</span></div>
+    <div style="display: flex; align-items: center; gap: 40px">
+      <span style="width: 96px; height: 96px; border-radius: 24px; background: #3B358A; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="64" height="64" viewBox="-50 -50 100 100" style="flex: none; overflow: visible"><path d="M-27 -6 C-27 -26 -4 -31 10 -27 C27 -23 31 -6 28 9 C25 25 6 31 -8 29 C-23 27 -27 13 -27 -6 Z" fill="#FFFFFF"></path><circle cx="-7" cy="-3" r="3.7" fill="#3B358A"></circle><circle cx="11" cy="-3" r="3.7" fill="#3B358A"></circle></svg></span>
+      <span style="width: 96px; height: 96px; border-radius: 24px; background: #18181B; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="64" height="64" viewBox="-50 -50 100 100" style="flex: none; overflow: visible"><path d="M-27 -6 C-27 -26 -4 -31 10 -27 C27 -23 31 -6 28 9 C25 25 6 31 -8 29 C-23 27 -27 13 -27 -6 Z" fill="#FFFFFF"></path><circle cx="-7" cy="-3" r="3.7" fill="#18181B"></circle><circle cx="11" cy="-3" r="3.7" fill="#18181B"></circle></svg></span>
+      <span style="display: flex; align-items: center; gap: 8px"><svg aria-hidden="true" width="28" height="28" viewBox="-50 -50 100 100" style="flex: none; overflow: visible"><path d="M-27 -6 C-27 -26 -4 -31 10 -27 C27 -23 31 -6 28 9 C25 25 6 31 -8 29 C-23 27 -27 13 -27 -6 Z" fill="#3B358A"></path><circle cx="-7" cy="-3" r="3.7" fill="#FFFFFF"></circle><circle cx="11" cy="-3" r="3.7" fill="#FFFFFF"></circle></svg><span style="font-family: Jost, sans-serif; font-size: 22px; font-weight: 700; letter-spacing: -0.50px; color: #18181B; line-height: 1">shugaba</span></span>
+    </div>
+    <span style="font-size: 14px; color: #71717A">Logo A. Pebble alone is the app icon and the face in the app.</span>
+  </section>
+  <section style="display: flex; flex-direction: column; gap: 22px; padding-left: 56px; border-left: 1px solid #E4E4E7">
+    <span style="font-family: Jost, sans-serif; font-size: 72px; font-weight: 700; letter-spacing: -2px; line-height: 1">$300</span>
+    <span style="font-family: Jost, sans-serif; font-size: 15px; font-weight: 500; color: #71717A">Jost · numbers, headings, logo</span>
+    <span style="margin-top: 18px; font-size: 22px; font-weight: 600; line-height: 1.4">Ngozi gets paid today. Musa was covered by the pool.</span>
+    <span style="font-size: 15px; color: #71717A">Plus Jakarta Sans · everything else</span>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":420}}'>
+class Component extends DCLogic { renderVals() { return {}; } }
+</script>
+</body>
+</html>
