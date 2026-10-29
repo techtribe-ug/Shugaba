@@ -7,6 +7,8 @@ assertDemoGuard(process.env);
 
 const config: NextConfig = {
   serverExternalPackages: ["pg-boss", "pg", "postgres"],
+  // forbidden() for /ops: non-operators get a real 403 (spec 4.2.7).
+  experimental: { authInterrupts: true },
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders() }];
   },

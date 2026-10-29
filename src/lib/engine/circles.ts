@@ -108,7 +108,10 @@ export async function confirmMandate(membershipId: string) {
     await tx.update(s.collectionMandates).set({ status: "ACTIVE", providerVaultId: vaultId, updatedAt: new Date() }).where(eq(s.collectionMandates.membershipId, membershipId));
     await tx.update(s.memberships).set({ status: "ACTIVE", updatedAt: new Date() }).where(eq(s.memberships.id, membershipId));
     // Fraud rule 2 watches for payment-method changes before a payout.
-    await tx.update(s.members).set({ paypalVaultId: vaultId, paymentMethodChangedAt: await now(tx), updatedAt: new Date() }).where(eq(s.members.id, m!.memberId));
+    // Linking PayPal for the first time is not a change; replacing a saved method is.
+    const [member] = await tx.select({ vault: s.members.paypalVaultId }).from(s.members).where(eq(s.members.id, m!.memberId));
+    const changed = !!member?.vault && member.vault !== vaultId;
+    await tx.update(s.members).set({ paypalVaultId: vaultId, ...(changed ? { paymentMethodChangedAt: await now(tx) } : {}), updatedAt: new Date() }).where(eq(s.members.id, m!.memberId));
   });
   await publish(m!.circleId, "circle.updated");
   return { circleId: m!.circleId };

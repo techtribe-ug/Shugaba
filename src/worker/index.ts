@@ -2,6 +2,7 @@ import PgBoss from "pg-boss";
 import { DEFAULT_DATABASE_URL } from "@/lib/db/client";
 import { processWebhook, runDue, storeWebhook } from "@/lib/engine";
 import { getMockProvider } from "@/lib/paypal";
+import { dispatchNotifications } from "@/lib/notify/dispatch";
 import { reconcile } from "./reconcile";
 
 export type WorkerStatus = { running: boolean; startedAt: string | null; lastTickAt: string | null; lastError: string | null };
@@ -56,6 +57,7 @@ export async function startWorker() {
   async function tick() {
     try {
       await runDue();
+      await dispatchNotifications();
       status.lastTickAt = new Date().toISOString();
       status.lastError = null;
     } catch (e) {

@@ -3,6 +3,10 @@ import { LiveRefresh } from "@/components/live";
 import { BrandBar } from "@/components/ui/top-bar";
 import { CAST, FAMILY_CIRCLE_ID } from "@/lib/demo/cast";
 import { GOLDEN_STEPS, goldenState } from "@/lib/demo/golden";
+import { desc, eq } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import * as s from "@/lib/db/schema";
+import { previewText } from "@/lib/notify/channels";
 import { JudgePanel } from "./panel";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +17,12 @@ export default async function Judge() {
   const g = await goldenState();
   const musaRecovery = g.recoveries?.find((r) => r.status !== "PAID") ?? null;
   const agreedTrade = g.trades?.find((t) => t.status === "AGREED") ?? null;
+  const sent = await db()
+    .select({ id: s.outboundMessages.id, template: s.outboundMessages.template, params: s.outboundMessages.paramsJson, status: s.outboundMessages.status, name: s.members.name, at: s.outboundMessages.createdAt })
+    .from(s.outboundMessages)
+    .innerJoin(s.members, eq(s.members.id, s.outboundMessages.memberId))
+    .orderBy(desc(s.outboundMessages.createdAt))
+    .limit(5);
   return (
     <main className="mx-auto max-w-[880px] px-4 py-11 sm:px-6 rise">
       <LiveRefresh circleId={FAMILY_CIRCLE_ID} />
@@ -40,6 +50,19 @@ export default async function Judge() {
         recoveryPaid={musaRecovery?.amountPaid ?? 0}
         tradeId={agreedTrade?.id ?? null}
       />
+      {sent.length ? (
+        <section aria-label="WhatsApp" className="mt-12">
+          <h2 className="text-[13px] font-bold text-[#A1A1AA]">WhatsApp {process.env.WHATSAPP_MODE === "cloud" ? "" : "(mock, not sent)"}</h2>
+          <ul className="mt-3 flex flex-col gap-2">
+            {sent.map((m) => (
+              <li key={m.id} className="max-w-[440px] rounded-[14px] bg-surface px-4 py-3">
+                <span className="text-[13px] font-bold text-muted">To {m.name}</span>
+                <p className="mt-0.5 text-[15px]">{previewText(m.template, m.params as string[])}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
       <section aria-label="See it as" className="mt-12">
         <h2 className="text-[13px] font-bold text-[#A1A1AA]">See it as</h2>
         <ul className="mt-3 flex flex-wrap gap-2">

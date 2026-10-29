@@ -2,7 +2,7 @@
  * Golden path, steps 1 to 10, in mock mode against a real Postgres (spec 15, M5).
  * Needs TEST_DATABASE_URL; CI provides one. Skipped otherwise.
  */
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { beforeAll, describe, expect, it } from "vitest";
 
 const url = process.env.TEST_DATABASE_URL;
@@ -113,4 +113,23 @@ describe.skipIf(!url)("golden path (mock)", () => {
     await expect(rateLimit("test:rl", 3, 60)).rejects.toBeInstanceOf(RateLimitError);
     await expect(rateLimit("test:other", 3, 60)).resolves.toBeUndefined();
   });
+
+  it("history seed: a payout to a member who changed PayPal in the last 48h is held, and an operator release pays it", async () => {
+    const { seedHistory } = await import("@/lib/demo/history");
+    const { reviewFlag } = await import("@/lib/engine/fraud");
+    const { db } = mod.client.getConn();
+    await seedHistory();
+    expect(await seedHistory()).toMatchObject({ skipped: true });
+    const [abuja] = await db.select().from(mod.s.circles).where(eq(mod.s.circles.name, "Abuja Teachers"));
+    expect(abuja!.status).toBe("PAUSED");
+    const [held] = await db.select().from(mod.s.rounds).where(and(eq(mod.s.rounds.circleId, abuja!.id), eq(mod.s.rounds.status, "HELD")));
+    expect(held).toBeDefined();
+    const [flag] = await db.select().from(mod.s.fraudFlags).where(and(eq(mod.s.fraudFlags.circleId, abuja!.id), eq(mod.s.fraudFlags.rule, "METHOD_CHANGED_BEFORE_PAYOUT")));
+    await reviewFlag(flag!.id, mod.cast.OPERATOR_ID, "CLEARED", "Member confirmed the change by phone");
+    const [after] = await db.select().from(mod.s.circles).where(eq(mod.s.circles.id, abuja!.id));
+    expect(after!.status).toBe("ACTIVE");
+    const [r] = await db.select().from(mod.s.rounds).where(eq(mod.s.rounds.id, held!.id));
+    expect(r!.status).toBe("PAID_OUT");
+    for (const c of await db.select({ id: mod.s.circles.id }).from(mod.s.circles)) expect(await mod.verifyChain(await mod.readChain(db, c.id))).toMatchObject({ ok: true });
+  }, 120_000);
 });

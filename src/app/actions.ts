@@ -11,6 +11,7 @@ import { members } from "@/lib/db/schema";
 import { acceptOrderAndStart, createCircle, EngineError, joinCircle, requestSwap, signTrade } from "@/lib/engine";
 import { CAST, castId, OPERATOR_ID } from "@/lib/demo/cast";
 import { rateLimit } from "@/lib/security/rate-limit";
+import { E164, setWhatsApp } from "@/lib/notify/optin";
 
 export type ActionResult = { ok: true; message?: string } | { ok: false; error: string };
 
@@ -105,6 +106,20 @@ export async function requestSwapAction(circleId: string, targetSeq: number | nu
     const r = await requestSwap({ circleId: input.circleId, memberId: me.id, reason: input.reason, targetSeq: input.targetSeq ?? undefined });
     revalidatePath(`/c/${input.circleId}`, "layout");
     return { ok: true, tradeId: r.tradeId, agreed: r.agreed, message: r.agreed ? "An agent agreed. Check the terms and sign." : "No one could swap within their limits right now." };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/** WhatsApp notices: opt in with a number, or turn them off (spec 10.9). */
+export async function setWhatsAppAction(phone: string | null): Promise<ActionResult> {
+  const me = await requireMember();
+  const clean = phone === null ? null : phone.replace(/[\s()-]/g, "");
+  if (clean !== null && !E164.test(clean)) return { ok: false, error: "Use the full number with country code, like +234 803 123 4567." };
+  try {
+    await setWhatsApp(me.id, clean, "settings");
+    revalidatePath("/settings");
+    return { ok: true };
   } catch (e) {
     return fail(e);
   }
