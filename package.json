@@ -19,7 +19,8 @@
     "db:seed": "tsx src/lib/db/seed.ts",
     "db:reset": "tsx src/lib/db/reset.ts && pnpm db:migrate && pnpm db:seed",
     "eval:agents": "tsx scripts/eval-agents.ts",
-    "record:golden": "tsx scripts/record-golden.ts"
+    "record:golden": "tsx scripts/record-golden.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.107",
@@ -36,6 +37,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.7",
+    "@playwright/test": "1.63.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",

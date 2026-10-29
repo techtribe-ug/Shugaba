@@ -10,3 +10,7 @@ next-env.d.ts
 !.env.example
 .DS_Store
 supabase/.temp/
+
+# Playwright
+/test-results/
+/playwright-report/
