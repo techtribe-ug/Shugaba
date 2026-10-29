@@ -1,0 +1,217 @@
+<title>Shugaba 3D</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap">
+<style>
+/* Layout: one phone-width column. Shugaba's line on top, the stage in the middle, the ask bar at the bottom. Dark-first. */
+:root{
+  --bg:#FFFFFF; --surface:#F4F4F5; --fg:#18181B; --muted:#71717A; --line:#E4E4E7;
+  --primary:#3B358A; --deep:#231F5C; --accent:#B7860B; --eye:#FFFFFF; --paid:#2E7D32; --ink:#18181B;
+  --sans:"Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px}
+.app{max-width:420px;margin:0 auto;min-height:100%;box-sizing:border-box;padding-block:32px 24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px}
+.line{min-height:48px;text-align:center;font-size:17px;line-height:1.4;text-wrap:balance;transition:opacity .25s}
+.line small{display:block;color:var(--muted);font-size:13px;margin-top:4px}
+.stage{position:relative;height:300px;display:grid;place-items:center}
+.stage canvas{position:absolute;inset:0;width:100%!important;height:100%!important;opacity:0;transition:opacity .2s;touch-action:none;cursor:pointer}
+.flat{cursor:pointer}
+.stage.live canvas{opacity:1}
+.flat{transition:transform .35s cubic-bezier(.3,1.6,.5,1),opacity .2s;}
+.stage.live .flat{transform:scale(.4) translateY(60px);opacity:0}
+.shadow{position:absolute;bottom:34px;width:120px;height:16px;border-radius:50%;background:#000;opacity:.12;filter:blur(6px);transition:transform .3s}
+.ask{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 6px 6px 12px}
+.ask svg{flex:none}
+.ask label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.ask input{flex:1;min-width:0;background:none;border:0;color:var(--fg);font:inherit;font-size:16px;padding:10px 0;outline:none}
+.ask button{flex:none;width:44px;height:44px;border-radius:50%;border:0;background:var(--ink);color:#FFFFFF;display:grid;place-items:center;cursor:pointer}
+.ask button:focus-visible,.ask:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.hint{text-align:center;color:var(--muted);font-size:13px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.chips button{font:inherit;font-size:13px;color:var(--fg);background:none;border:1px solid var(--line);border-radius:999px;padding:8px 12px;cursor:pointer;min-height:36px}
+@media (prefers-reduced-motion:reduce){.flat,.stage canvas,.line{transition:none}}
+</style>
+
+<main class="app">
+  <div class="line" id="line" aria-live="polite">Sannu, Amina. All six paid this round.<small>Family Circle · next payout Ngozi, Thu</small></div>
+
+  <div class="stage" id="stage">
+    <div class="shadow" id="shadow" aria-hidden="true"></div>
+    <svg class="flat" id="flat" width="170" height="170" viewBox="-50 -50 100 100" role="img" aria-label="Shugaba">
+      <defs><radialGradient id="pg" cx="35%" cy="28%" r="80%"><stop offset="0" stop-color="var(--primary)"/><stop offset="1" stop-color="var(--deep)"/></radialGradient></defs>
+      <path d="M-27 -6 C-27 -26 -4 -31 10 -27 C27 -23 31 -6 28 9 C25 25 6 31 -8 29 C-23 27 -27 13 -27 -6 Z" fill="var(--primary)"/>
+      <g fill="var(--eye)"><circle cx="-7" cy="-3" r="3.7"/><circle cx="11" cy="-3" r="3.7"/></g>
+    </svg>
+  </div>
+
+  <div class="chips" aria-label="Try asking">
+    <button type="button" data-q="What's my balance?">My balance</button>
+    <button type="button" data-q="When is my turn?">My turn</button>
+    <button type="button" data-q="Send my payout to a new account">Change account</button>
+  </div>
+
+  <form class="ask" id="ask">
+    <svg width="30" height="30" viewBox="-32 -32 64 64" aria-hidden="true"><path d="M-27 -6 C-27 -26 -4 -31 10 -27 C27 -23 31 -6 28 9 C25 25 6 31 -8 29 C-23 27 -27 13 -27 -6 Z" fill="var(--primary)"/><g fill="var(--eye)"><circle cx="-7" cy="-3" r="4.5"/><circle cx="11" cy="-3" r="4.5"/></g></svg>
+    <label for="q">Ask Shugaba</label>
+    <input id="q" autocomplete="off" placeholder="Ask Shugaba…">
+    <button type="submit" aria-label="Send"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+  </form>
+  <p class="hint">Start typing, or tap Shugaba to squish it.</p>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  const stage=document.getElementById('stage'), line=document.getElementById('line'), input=document.getElementById('q'), shadow=document.getElementById('shadow'), flat=document.getElementById('flat');
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  let renderer;
+  try{ if(!window.THREE) return; renderer=new THREE.WebGLRenderer({antialias:true,alpha:true}); }catch(e){ return; }
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  stage.appendChild(renderer.domElement);
+  const scene=new THREE.Scene();
+  const cam=new THREE.PerspectiveCamera(30,1,.1,50); cam.position.set(0,.3,7.4); cam.lookAt(0,-.1,0);
+  scene.add(new THREE.HemisphereLight(0xffffff,0xc9c9d6,.9));
+  const key=new THREE.DirectionalLight(0xffffff,.8); key.position.set(2,4,5); scene.add(key);
+  const back=new THREE.DirectionalLight(0xbdb8ff,.5); back.position.set(-3,2,-3); scene.add(back);
+
+  // ---------- soft body ----------
+  const bot=new THREE.Group(); scene.add(bot);
+  const geo=new THREE.SphereGeometry(1,96,72), pos=geo.attributes.position, N=pos.count;
+  const base=new Float32Array(N*3), nrm=new Float32Array(N*3), v=new THREE.Vector3();
+  for(let i=0;i<N;i++){ v.fromBufferAttribute(pos,i);
+    const k=1+.06*Math.sin(v.x*2.1+.6)*Math.cos(v.y*1.7)+.04*v.x*v.y;
+    v.multiplyScalar(k); v.x*=1.08; v.y*=.9; v.z*=.86;
+    base[i*3]=v.x; base[i*3+1]=v.y; base[i*3+2]=v.z; }
+  geo.computeVertexNormals();
+  const n0=geo.attributes.normal; for(let i=0;i<N;i++){nrm[i*3]=n0.getX(i);nrm[i*3+1]=n0.getY(i);nrm[i*3+2]=n0.getZ(i)}
+  const mat=new THREE.MeshPhysicalMaterial({color:css('--primary'),roughness:.42,metalness:0,clearcoat:.7,clearcoatRoughness:.35});
+  const body=new THREE.Mesh(geo,mat); bot.add(body);
+
+  const eyeMat=new THREE.MeshStandardMaterial({color:css('--eye'),roughness:.25});
+  const eyes=new THREE.Group(); bot.add(eyes);
+  const eL=new THREE.Mesh(new THREE.SphereGeometry(.12,24,24),eyeMat), eR=eL.clone();
+  eL.position.set(-.27,.12,.8); eR.position.set(.4,.12,.78); eL.scale.z=eR.scale.z=.45; eyes.add(eL,eR);
+
+  // halo for non-watching states
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(1.45,.022,12,160),new THREE.MeshBasicMaterial({color:css('--primary'),transparent:true,opacity:0}));
+  ring.scale.set(1.08,.92,1); ring.position.z=-.7; scene.add(ring);
+
+  function size(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
+  size(); addEventListener('resize',size);
+
+  // ---------- jelly physics ----------
+  // global squash spring (j>0 = tall, j<0 = flat), sway spring, and local dents
+  let j=0, jv=0, sway=0, swv=0;
+  const dents=[]; // {p:Vector3 (local), a:amplitude, av:velocity, r:radius}
+  function poke(local, strength, radius){ dents.push({p:local.clone().normalize(), a:0, av:-strength, r:radius||.55}); if(dents.length>5) dents.shift(); }
+  function squash(amount){ jv+=amount; }
+  // hop
+  const FLOOR=-.55; let y=FLOOR, yv=0, airborne=false;
+  function hop(power){ if(reduce) return; yv=power; airborne=true; squash(1.6); }
+
+  let mode='flat', pop=0, t0=0, look=0, ringState='watching', ringBusy=0, happy=0, blinkAt=performance.now()+2500, idleTimer=null;
+  const ringColor={watching:css('--primary'),thinking:css('--primary'),pleased:css('--paid'),alert:'#EF5350'};
+  function setRing(s){ringState=s;ring.material.color.set(ringColor[s]||ringColor.watching)}
+
+  function popOut(){ if(mode==='live'||mode==='popping') return; mode='popping'; t0=performance.now(); stage.classList.add('live'); y=FLOOR-.6; hop(5.2); }
+  function goBack(){ if(mode==='flat') return; mode='returning'; t0=performance.now(); squash(-1.2); }
+  function armIdle(ms){ clearTimeout(idleTimer); idleTimer=setTimeout(()=>{ if(document.activeElement!==input||!input.value) goBack(); }, ms); }
+
+  input.addEventListener('focus',()=>{popOut();armIdle(6000)});
+  input.addEventListener('input',()=>{
+    popOut(); ringBusy=1; setRing('thinking');
+    const p=Math.min(1,input.selectionStart/28); look=p*2-1;
+    // a soft poke on the lower front, toward the caret side
+    poke(new THREE.Vector3(look*.5,-.35,1), .16, .5); sway+= look*.02; armIdle(6000);
+  });
+  input.addEventListener('blur',()=>armIdle(1500));
+
+  // tap to squish
+  const ray=new THREE.Raycaster(), m2=new THREE.Vector2();
+  renderer.domElement.addEventListener('pointerdown',e=>{
+    const r=renderer.domElement.getBoundingClientRect();
+    m2.set(((e.clientX-r.left)/r.width)*2-1, -((e.clientY-r.top)/r.height)*2+1);
+    ray.setFromCamera(m2,cam); const hit=ray.intersectObject(body)[0];
+    if(hit){ const local=body.worldToLocal(hit.point.clone()); poke(local,.45,.65); squash(-1.4); happy=.6; armIdle(5000); }
+  });
+  flat.addEventListener('click',()=>{popOut();armIdle(5000)});
+
+  function reply(q){
+    const s=q.toLowerCase();
+    if(/account|send.*new|change/.test(s)) return ['alert',"I can't send money to a new account. Payouts only go to the PayPal you joined with."];
+    if(/turn|when/.test(s)) return ['pleased','Your turn is round 4, Thu 30 Oct. $300, guarded.'];
+    if(/balance|paid|owe/.test(s)) return ['pleased','You\'ve paid 3 of 6. Next $51 on Thu 23 Oct.'];
+    return ['watching','I\'m watching Family Circle. Everyone is paid up.'];
+  }
+  document.getElementById('ask').addEventListener('submit',e=>{
+    e.preventDefault(); const q=input.value.trim(); if(!q) return;
+    popOut(); ringBusy=1; setRing('thinking'); line.style.opacity=.35;
+    setTimeout(()=>{ const [st,txt]=reply(q); setRing(st); ringBusy=0;
+      if(st==='pleased'){ happy=1; hop(3.4); } else if(st==='alert'){ squash(-1.8); sway+=.15; } else { squash(1); }
+      line.textContent=txt; line.style.opacity=1; input.value=''; look=0; armIdle(5000); },700);
+  });
+  document.querySelectorAll('[data-q]').forEach(b=>b.addEventListener('click',()=>{input.value=b.dataset.q;input.focus();input.dispatchEvent(new Event('input'));setTimeout(()=>document.getElementById('ask').requestSubmit(),400)}));
+
+  const ease=x=>1-Math.pow(1-x,3);
+  let last=performance.now();
+  function frame(now){
+    requestAnimationFrame(frame);
+    if(mode==='flat'){ last=now; return; }
+    const dt=Math.min(.033,(now-last)/1000); last=now; const t=now/1000;
+
+    if(mode==='popping'){ pop=Math.min(1,pop+dt/.18); if(pop>=1) mode='live'; }
+    if(mode==='returning'){ const k=Math.min(1,(now-t0)/320); pop=1-ease(k); if(k>=1){ mode='flat'; pop=0; stage.classList.remove('live'); setRing('watching'); renderer.clear(); return; } }
+
+    // gravity hop + landing squash
+    if(airborne){ yv-=16*dt; y+=yv*dt; if(y<=FLOOR){ y=FLOOR; squash(Math.min(0,yv)*.55); yv=-yv*.28; if(Math.abs(yv)<.8){yv=0;airborne=false} } }
+    // springs: soft (low stiffness), little damping = jelly
+    const k=reduce?400:170, c=reduce?40:7;
+    jv+=(-k*j-c*jv)*dt; j+=jv*dt; j=Math.max(-.35,Math.min(.35,j));
+    swv+=(-120*sway-5*swv)*dt; sway+=swv*dt;
+    if(!reduce) sway+=Math.sin(t*1.3)*.0006; // idle breath
+    for(const d of dents){ d.av+=(-140*d.a-6*d.av)*dt; d.a+=d.av*dt; }
+    for(let i=dents.length-1;i>=0;i--){ if(Math.abs(dents[i].a)<.002&&Math.abs(dents[i].av)<.01) dents.splice(i,1); }
+
+    // deform vertices
+    const breathe=reduce?0:Math.sin(t*2)*.012;
+    for(let i=0;i<N;i++){
+      let x=base[i*3], yy=base[i*3+1], z=base[i*3+2];
+      const nx=nrm[i*3], ny=nrm[i*3+1], nz=nrm[i*3+2];
+      // volume-preserving squash: tall when j>0, wide when j<0; bottom stays planted
+      const sy=1+j, sxz=1/Math.sqrt(sy);
+      const h=(yy+1)/2; // 0 bottom .. 1 top
+      x*=sxz; z*=sxz; yy=(yy+.9)*sy-.9;
+      // top lags behind = jelly sway
+      x+=sway*h*h*1.6;
+      // dents along the normal
+      let push=breathe;
+      for(const d of dents){ const dx=nx-d.p.x, dy=ny-d.p.y, dz=nz-d.p.z; const w=Math.exp(-(dx*dx+dy*dy+dz*dz)/(d.r*d.r)); push+=d.a*w; }
+      pos.setXYZ(i, x+nx*push, yy+ny*push, z+nz*push);
+    }
+    pos.needsUpdate=true; geo.computeVertexNormals();
+
+    // eyes ride the squash
+    const sy=1+j, sxz=1/Math.sqrt(sy);
+    eyes.scale.set(sxz,sy,sxz); eyes.position.set(sway*1.1+look*.06, (sy-1)*.9, 0);
+    bot.position.y=y; bot.scale.setScalar(Math.max(.001,pop));
+    bot.rotation.y+=((look*.35)-bot.rotation.y)*.1;
+    bot.rotation.z=-sway*.6;
+
+    // blink + happy squint
+    let ey=1; if(now>blinkAt){ ey=Math.max(.1,1-Math.sin((now-blinkAt)/140*Math.PI)); if(now-blinkAt>140){blinkAt=now+2200+Math.random()*2500} }
+    happy*=.985; ey=Math.min(ey,1-happy*.7);
+    eL.scale.y=eR.scale.y=ey;
+
+    // halo only when busy or not watching
+    const want=(ringBusy||ringState!=='watching')?.8:0;
+    ring.material.opacity+=(want-ring.material.opacity)*.08;
+    ring.position.y=y+.55; ring.scale.set(1.08*pop*sxz,.92*pop*sy,1);
+
+    shadow.style.transform=`scale(${(.5+.5*pop)*(1-(y-FLOOR)*.25)*sxz},1)`;
+    renderer.render(scene,cam);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>

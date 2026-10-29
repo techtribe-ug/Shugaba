@@ -1,0 +1,89 @@
+<title>Shugaba Pebble</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap">
+<style>
+/* Layout: option sheet on white. Age options grid (big + small size each), then the current mark for reference. */
+:root{
+  --bg:#FFFFFF; --surface:#F4F4F5; --line:#E4E4E7; --fg:#18181B; --muted:#71717A;
+  --pebble:#3B358A; --pebble-dark:#2A2566; --pebble-light:#5A54A8; --eye:#FFFFFF; --white:#FFFFFF; --gold:#B7860B;
+  --sans:"Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme:light;
+}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.5}
+.wrap{max-width:1080px;margin:0 auto;padding-block:40px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:48px}
+h1{font-size:28px;margin:0;font-weight:700}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 20px;font-weight:600}
+.lead{color:var(--muted);margin:6px 0 0}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.tile{background:var(--surface);border-radius:16px;padding:22px 14px 18px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+.tile.ref{background:var(--bg);border:1px dashed var(--line)}
+.pair{display:flex;align-items:flex-end;gap:14px}
+.name{font-weight:600}
+.note{color:var(--muted);font-size:13px}
+.num{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--muted)}
+svg.em{overflow:visible;display:block}
+.blink{animation:blink 5s infinite;transform-box:fill-box;transform-origin:center}
+.squish{animation:squish 3.2s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+@keyframes blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+@keyframes squish{0%,100%{transform:scale(1,1)}45%{transform:scale(1.04,.95)}60%{transform:scale(.98,1.03)}75%{transform:scale(1.01,.99)}}
+@media (prefers-reduced-motion:reduce){.em *{animation:none!important}}
+</style>
+
+<main class="wrap">
+  <header>
+    <h1>Shugaba · Aged pebble</h1>
+    <p class="lead">Ways to show an experienced elder. Options only; mix any two.</p>
+  </header>
+  <section>
+    <h2>Age options</h2>
+    <div class="grid" id="ages"></div>
+  </section>
+</main>
+
+<script>
+const BLOB='M-27 -6 C-27 -26 -4 -31 10 -27 C27 -23 31 -6 28 9 C25 25 6 31 -8 29 C-23 27 -27 13 -27 -6 Z';
+const EX=[-7,11], EY=-3;
+let uid=0;
+
+function eyesDots(r){return `<g class="blink" fill="var(--eye)"><circle cx="${EX[0]}" cy="${EY}" r="${r||3.7}"/><circle cx="${EX[1]}" cy="${EY}" r="${r||3.7}"/></g>`}
+
+function pebble(o,size){
+  const id='a'+(uid++);
+  let defs='', under='', over='', eyes=eyesDots(), fill='var(--pebble)';
+  if(o.lids){ // half-lidded: calm, seen-it-all
+    eyes=`<g class="blink" fill="var(--eye)">${EX.map(x=>`<path d="M${x-4.2} ${EY} A4.2 4.2 0 0 0 ${x+4.2} ${EY} Z"/>`).join('')}</g>`;
+  }
+  if(o.brows) over+=`<g fill="none" stroke="var(--white)" stroke-width="2.6" stroke-linecap="round" opacity=".95">${EX.map((x,i)=>`<path d="M${x-5} ${EY-7+(i?0:.5)} Q${x} ${EY-10.5} ${x+5} ${EY-7.5}"/>`).join('')}</g>`;
+  if(o.bushy) over+=`<g fill="var(--white)">${EX.map(x=>`<path d="M${x-6} ${EY-6} Q${x-1} ${EY-12} ${x+6} ${EY-8} Q${x+1} ${EY-8.5} ${x-6} ${EY-6} Z"/>`).join('')}</g>`;
+  if(o.lines) over+=`<g fill="none" stroke="var(--white)" stroke-opacity=".55" stroke-width="1.2" stroke-linecap="round"><path d="M${EX[1]+6} ${EY-2} l3 -2 M${EX[1]+6.5} ${EY+1} l3.4 0 M${EX[1]+6} ${EY+4} l3 2"/><path d="M${EX[0]-6} ${EY-2} l-3 -2 M${EX[0]-6.5} ${EY+1} l-3.4 0 M${EX[0]-6} ${EY+4} l-3 2"/></g>`;
+  if(o.strata) over+=`<g fill="none" stroke="var(--white)" stroke-opacity=".16" stroke-width="1.3"><path d="M-25 8 Q0 2 27 12"/><path d="M-22 15 Q2 9 25 19"/><path d="M-16 22 Q4 17 20 25"/></g>`;
+  if(o.speckle){let d='';const pts=[[-18,12],[-12,20],[-4,15],[6,22],[14,14],[20,4],[-21,-12],[16,-18],[2,-22],[-9,6]];pts.forEach(([x,y],i)=>d+=`<circle cx="${x}" cy="${y}" r="${i%3?0.9:1.3}"/>`);over+=`<g fill="var(--white)" opacity=".28">${d}</g>`}
+  if(o.worn){defs+=`<radialGradient id="${id}" cx="38%" cy="22%" r="75%"><stop offset="0" stop-color="var(--pebble-light)"/><stop offset=".55" stop-color="var(--pebble)"/><stop offset="1" stop-color="var(--pebble-dark)"/></radialGradient>`;fill=`url(#${id})`;
+    over+=`<path d="M17 -22 l4 1 l-1 4 Z" fill="var(--pebble-dark)"/>`}
+  if(o.slate){fill='#4A476E'}
+  if(o.tuft) over+=`<path d="M-6 22 Q-4 31 1 33 Q3 28 5 33 Q9 30 9 22 Q2 25 -6 22 Z" fill="var(--white)"/>`;
+  if(o.cap) under+=`<g><path d="M-17 -24 Q-17 -38 2 -38 Q20 -38 20 -25 Q2 -30 -17 -24 Z" fill="var(--white)" stroke="var(--line)" stroke-width="1"/><path d="M-15 -28 Q2 -33 18 -29" fill="none" stroke="var(--gold)" stroke-width="1.6" stroke-dasharray="2 2"/></g>`;
+  if(o.glasses) over+=`<g fill="none" stroke="var(--white)" stroke-width="1.8">${EX.map(x=>`<circle cx="${x}" cy="${EY}" r="7"/>`).join('')}<path d="M${EX[0]+7} ${EY-1} Q2 ${EY-4} ${EX[1]-7} ${EY-1}"/></g>`;
+  if(o.smile) over+=`<path d="M-2 11 Q3 15 8 11" fill="none" stroke="var(--white)" stroke-width="2" stroke-linecap="round" opacity=".9"/>`;
+  return `<svg class="em" width="${size}" height="${size}" viewBox="-50 -50 100 100" role="img" aria-label="Shugaba ${o.label||''}">${defs?`<defs>${defs}</defs>`:''}<g class="squish">${o.cap?'':under}<path d="${BLOB}" fill="${fill}"/>${o.cap?under:''}${over}${o.hideEyes?'':eyes}</g></svg>`;
+}
+
+const options=[
+  ['Today','Reference: no age.',{},true],
+  ['White brows','Soft arcs above the eyes. The simplest elder cue.',{brows:true}],
+  ['Bushy brows','Thicker, tufted. More character, still clean.',{bushy:true}],
+  ['Heavy lids','Half-closed, calm eyes. Has seen it all.',{lids:true}],
+  ['Smile lines','Tiny lines at the eye corners.',{lines:true,smile:true}],
+  ['River-worn','Lighter top worn smooth, a small chip. Old stone.',{worn:true}],
+  ['Strata','Faint layers like a stone that took ages to form.',{strata:true}],
+  ['Speckled','Light flecks of an old granite pebble.',{speckle:true,slate:true}],
+  ['Round glasses','Reads "wise" anywhere in the world.',{glasses:true}],
+  ['White tuft','A small chin tuft, like a respected elder.',{tuft:true,brows:true}],
+  ['Hula cap','A white cap with a gold stitch line. Northern elder.',{cap:true,lids:true}],
+  ['Brows + lids','A strong mix: calm and wise, still minimal.',{brows:true,lids:true}]
+];
+document.getElementById('ages').innerHTML=options.map(([n,t,o,ref],i)=>`
+  <div class="tile${ref?' ref':''}"><span class="num">${ref?'NOW':String(i).padStart(2,'0')}</span>
+    <span class="pair">${pebble({...o,label:n},112)}${pebble({...o,label:n},36)}</span>
+    <span class="name">${n}</span><span class="note">${t}</span></div>`).join('');
+</script>

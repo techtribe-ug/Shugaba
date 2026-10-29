@@ -1,0 +1,151 @@
+<title>Shugaba Pebble</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap">
+<style>
+/* Layout: refinement sheet. Variants grid, then the final mark at sizes, its 7 states, then the home screen in context. Dark-first. */
+:root{
+  --bg:#121026; --surface:#1C1A36; --fg:#EDEBF7; --muted:#A9A5C4; --line:#2E2B4D;
+  --primary:#8F89E0; --deep:#4B4597; --accent:#E6B93A; --eye:#121026;
+  --paid:#66BB6A; --grace:#FBBF24; --failed:#EF5350;
+  --sans:"Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  --bg:#FAF7F2; --surface:#FFFFFF; --fg:#1B1A2E; --muted:#5E5B73; --line:#E7E2D8;
+  --primary:#3B358A; --deep:#231F5C; --accent:#C99412; --eye:#FFFFFF;
+  --paid:#2E7D32; --grace:#B26A00; --failed:#C62828; color-scheme:light}}
+:root[data-theme="light"]{
+  --bg:#FAF7F2; --surface:#FFFFFF; --fg:#1B1A2E; --muted:#5E5B73; --line:#E7E2D8;
+  --primary:#3B358A; --deep:#231F5C; --accent:#C99412; --eye:#FFFFFF;
+  --paid:#2E7D32; --grace:#B26A00; --failed:#C62828; color-scheme:light}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.5}
+.wrap{max-width:1040px;margin:0 auto;padding-block:40px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:56px}
+h1{font-size:28px;margin:0;font-weight:700}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 20px;font-weight:600}
+.lead{color:var(--muted);margin:6px 0 0}
+.grid{display:grid;gap:16px}
+.variants{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.states{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 12px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+.tile.pick{box-shadow:0 0 0 2px var(--accent);border-color:transparent}
+.name{font-weight:600}
+.note{color:var(--muted);font-size:13px}
+.final{display:flex;flex-wrap:wrap;align-items:flex-end;gap:32px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:28px}
+.final figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--muted);font-size:12px}
+.icon{width:72px;height:72px;border-radius:18px;background:linear-gradient(160deg,var(--deep),#0B0A1A);display:grid;place-items:center}
+.phone{width:min(360px,100%);margin:0 auto;background:#0B0A1A;border:1px solid var(--line);border-radius:32px;padding:28px 18px 18px;display:flex;flex-direction:column;align-items:center;gap:18px;color:#EDEBF7}
+.ringwrap{position:relative;width:280px;height:280px;max-width:100%}
+.ringwrap svg{position:absolute;inset:0}
+.say{text-align:center;font-size:17px;text-wrap:balance}
+.say small{display:block;color:#A9A5C4;font-size:13px;margin-top:2px}
+.askbar{width:100%;box-sizing:border-box;display:flex;align-items:center;gap:10px;border:1px solid #2E2B4D;background:#1C1A36;border-radius:999px;padding:6px 6px 6px 16px;color:#A9A5C4}
+.askbar span{flex:1}
+.askbar i{width:40px;height:40px;border-radius:50%;background:#8F89E0;display:grid;place-items:center}
+svg.em{overflow:visible;display:block}
+.halo{fill:none}
+.s-watching .halo{animation:breathe 4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.s-thinking .halo{stroke-dasharray:10 8;animation:dash 1.4s linear infinite}
+.s-speaking .halo{animation:ripple 1.6s ease-out infinite;transform-box:fill-box;transform-origin:center}
+.s-guarding .halo{stroke-dasharray:300;animation:lock 2.4s ease-in-out infinite}
+.blink{animation:blink 5s infinite;transform-box:fill-box;transform-origin:center}
+.float{animation:float 4s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(1.03);opacity:.5}}
+@keyframes dash{to{stroke-dashoffset:-36}}
+@keyframes ripple{0%{transform:scale(1);opacity:.9}100%{transform:scale(1.18);opacity:0}}
+@keyframes lock{0%{stroke-dashoffset:220}50%,100%{stroke-dashoffset:0}}
+@keyframes blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@media (prefers-reduced-motion:reduce){.em *,.float{animation:none!important}}
+</style>
+
+<main class="wrap">
+  <header>
+    <h1>Shugaba · Pebble</h1>
+    <p class="lead">The Original pebble is the chosen mark. A halo appears only when Shugaba has something to say.</p>
+  </header>
+
+  <section>
+    <h2>Options considered</h2>
+    <div class="grid variants" id="variants"></div>
+  </section>
+
+  <section>
+    <h2>Final mark</h2>
+    <div class="final" id="final"></div>
+  </section>
+
+  <section>
+    <h2>States</h2>
+    <div class="grid states" id="states"></div>
+  </section>
+
+  <section>
+    <h2>Home screen</h2>
+    <div class="phone" aria-label="Home screen example">
+      <div class="ringwrap" id="home"></div>
+      <div class="say">All six paid this round.<small>Family Circle · Ngozi collects Thu</small></div>
+      <div class="askbar" aria-hidden="true"><span>Ask Shugaba…</span><i><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#121026" stroke-width="2.4" stroke-linecap="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></i></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const BLOB='M-27 -6 C-27 -26 -4 -31 10 -27 C27 -23 31 -6 28 9 C25 25 6 31 -8 29 C-23 27 -27 13 -27 -6 Z';
+const HALO={watching:'var(--primary)',thinking:'var(--primary)',speaking:'var(--primary)',guarding:'var(--accent)',pleased:'var(--paid)',concerned:'var(--grace)',alert:'var(--failed)'};
+let uid=0;
+
+function eyes(state,o){
+  const cap=o.capsule, x=9, y=-3;
+  if(state==='pleased') return `<g stroke="var(--eye)" stroke-width="3" fill="none" stroke-linecap="round"><path d="M${-x-4} ${y+1} q4 -5 8 0"/><path d="M${x-4} ${y+1} q4 -5 8 0"/></g>`;
+  if(state==='guarding') return `<g fill="var(--eye)"><rect x="${-x-4.5}" y="${y-1.5}" width="9" height="3" rx="1.5"/><rect x="${x-4.5}" y="${y-1.5}" width="9" height="3" rx="1.5"/></g>`;
+  let dx=0,dy=0,w=cap?5.6:7.4,h=cap?10:7.4;
+  if(state==='thinking'){dx=-3;dy=-3}
+  if(state==='concerned'){dy=3;h*=.75}
+  if(state==='alert'){w*=1.25;h*=1.2}
+  const r=w/2;
+  return `<g class="blink" fill="var(--eye)"><rect x="${-x+dx-w/2}" y="${y+dy-h/2}" width="${w}" height="${h}" rx="${r}"/><rect x="${x+dx-w/2}" y="${y+dy-h/2}" width="${w}" height="${h}" rx="${r}"/></g>`;
+}
+
+function pebble(o){
+  const id='g'+(uid++), st=o.state||'watching', size=o.size||120;
+  const fill=o.gradient?`url(#${id})`:'var(--primary)';
+  let defs=o.gradient?`<defs><radialGradient id="${id}" cx="35%" cy="28%" r="80%"><stop offset="0" stop-color="var(--primary)"/><stop offset="1" stop-color="var(--deep)"/></radialGradient>${o.glow?`<filter id="${id}f" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5"/></filter>`:''}</defs>`:'';
+  let s='';
+  if(o.glow) s+=`<path d="${BLOB}" fill="var(--primary)" opacity=".45" filter="url(#${id}f)"/>`;
+  if(o.halo) s+=`<path class="halo" d="${BLOB}" transform="scale(1.32)" stroke="${HALO[st]}" stroke-width="${o.haloW||2.4}" vector-effect="non-scaling-stroke"/>`;
+  if(o.orbit){for(let i=0;i<6;i++){const a=(-90+60*i)*Math.PI/180;s+=`<circle cx="${(41*Math.cos(a)).toFixed(1)}" cy="${(41*Math.sin(a)).toFixed(1)}" r="4" fill="${i===0?'var(--accent)':'var(--primary)'}"/>`}}
+  s+=`<g class="${o.float?'float':''}"><path d="${BLOB}" fill="${fill}"/>`;
+  if(o.knot) s+=`<g fill="none" stroke="var(--eye)" stroke-opacity=".18" stroke-width="1.4"><rect x="-13" y="6" width="26" height="14" rx="4"/><rect x="-7" y="0" width="14" height="26" rx="4"/></g>`;
+  if(o.glint) s+=`<path d="M-19 -15 Q-14 -23 -4 -24" fill="none" stroke="var(--accent)" stroke-width="3.2" stroke-linecap="round"/>`;
+  s+=`<g transform="translate(2,0)">${eyes(st,o)}</g></g>`;
+  return `<svg class="em s-${st}" width="${size}" height="${size}" viewBox="-50 -50 100 100" role="img" aria-label="Shugaba, ${st}">${defs}${s}</svg>`;
+}
+
+const FINAL={float:true};
+const variants=[
+  ['Original','Dot eyes, flat. Chosen.',FINAL,true],
+  ['Capsule eyes','Taller eyes read as alive.',{capsule:true}],
+  ['Gold glint','Light on polished stone.',{capsule:true,glint:true}],
+  ['Halo','Outline follows the shape; carries state.',{capsule:true,halo:true}],
+  ['Members','Six dots orbit: the circle.',{capsule:true,orbit:true}],
+  ['Engraved','Faint Arewa knot carved in.',{capsule:true,knot:true}],
+  ['Soft glow','Depth and light for dark mode.',{capsule:true,gradient:true,glow:true}],
+];
+document.getElementById('variants').innerHTML=variants.map(([n,t,o,p])=>`<div class="tile${p?' pick':''}">${pebble({...o,size:104})}<div class="name">${n}</div><div class="note">${t}</div></div>`).join('');
+
+document.getElementById('final').innerHTML=
+  [160,64,32,20].map(sz=>`<figure>${pebble({...FINAL,size:sz})}<figcaption>${sz}px</figcaption></figure>`).join('')+
+  `<figure><div class="icon">${pebble({size:54})}</div><figcaption>App icon</figcaption></figure>`;
+
+const states=[['watching','All good'],['thinking','Working'],['speaking','New message'],['guarding','Money moving'],['pleased','Paid / done'],['concerned','Missed payment'],['alert','Needs attention']];
+document.getElementById('states').innerHTML=states.map(([s,n])=>`<div class="tile">${pebble({...FINAL,halo:s!=='watching',state:s,size:80})}<div class="name">${s[0].toUpperCase()+s.slice(1)}</div><div class="note">${n}</div></div>`).join('');
+
+// home: ring of members around the pebble
+const members=[['A','paid'],['N','turn'],['I','paid'],['S','paid'],['T','paid'],['M','paid']];
+const col={paid:'#66BB6A',turn:'#E6B93A',grace:'#FBBF24',missed:'#EF5350'};
+let ring=`<svg width="280" height="280" viewBox="-140 -140 280 280" aria-hidden="true"><circle r="112" fill="none" stroke="#2E2B4D" stroke-width="1.5"/>`;
+members.forEach(([l,st],i)=>{const a=(-90+60*i)*Math.PI/180,x=112*Math.cos(a),y=112*Math.sin(a);
+  ring+=`<circle cx="${x}" cy="${y}" r="21" fill="#1C1A36" stroke="${col[st]}" stroke-width="3"/><text x="${x}" y="${y+5}" text-anchor="middle" font-family="Plus Jakarta Sans, sans-serif" font-size="15" font-weight="700" fill="#EDEBF7">${l}</text>`});
+ring+='</svg>';
+document.getElementById('home').innerHTML=ring+`<div style="position:absolute;inset:0;display:grid;place-items:center">${pebble({...FINAL,size:150})}</div>`;
+</script>
