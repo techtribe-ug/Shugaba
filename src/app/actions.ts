@@ -16,6 +16,8 @@ import { E164, setWhatsApp } from "@/lib/notify/optin";
 export type ActionResult = { ok: true; message?: string } | { ok: false; error: string };
 
 function fail(e: unknown): ActionResult {
+  // Design GStates "PayPal down": say nothing was charged.
+  if (e instanceof EngineError && e.code === "PROVIDER") return { ok: false, error: "PayPal isn't answering. Nothing was charged. Please try again in a few minutes." };
   if (e instanceof EngineError) return { ok: false, error: e.message };
   if (e instanceof z.ZodError) return { ok: false, error: "Please check the details and try again." };
   console.error(e);

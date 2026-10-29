@@ -1,3 +1,4 @@
+import { NoCircles } from "./empty";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Avatar } from "@/components/avatar";
@@ -36,7 +37,7 @@ export default async function Home() {
       </Link>
       <h2 className="mt-10 text-[13px] font-bold text-[#A1A1AA]">Your circles</h2>
       {circles.length === 0 ? (
-        <p className="mt-3 text-[15px] text-muted">No circles yet. Start one, or open an invite link.</p>
+        <NoCircles />
       ) : (
         <ul className="mt-2 divide-y divide-surface border-y border-surface">
           {circles.map((c) => (
@@ -55,7 +56,7 @@ export default async function Home() {
         </ul>
       )}
       <Link href="/circles/new" className="mt-8 inline-flex h-14 w-full items-center justify-center rounded-[14px] bg-text text-base font-bold text-white no-underline">
-        New circle
+        {circles.length === 0 ? "Start a circle" : "New circle"}
       </Link>
     </main>
   );
