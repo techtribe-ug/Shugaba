@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Shugaba is moving money</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Jost:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0070E0}a:hover{color:#003087}
+.num{font-variant-numeric:tabular-nums;font-family:'Jost','Plus Jakarta Sans',sans-serif}
+
+
+
+/* motion pass */
+@property --m-n{syntax:'<integer>';initial-value:0;inherits:false}
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:m-out .18s ease-in both}
+::view-transition-new(root){animation:m-in .32s cubic-bezier(.2,.8,.2,1) both}
+@keyframes m-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes m-out{to{opacity:0;transform:translateY(-4px)}}
+@keyframes m-breathe{0%,100%{scale:1 1}50%{scale:1.025 .985}}
+@keyframes m-look{0%,38%,100%{translate:0 0}42%,58%{translate:2px -.5px}62%,78%{translate:-1.5px 0}}
+@keyframes m-blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.12)}}
+@keyframes m-count{from{--m-n:0}to{--m-n:var(--to)}}
+:where(.m-root > :not(main)), :where(.m-root main > *){animation:m-in .5s cubic-bezier(.2,.8,.2,1) both}
+.m-root main > :nth-child(2){animation-delay:.05s}.m-root main > :nth-child(3){animation-delay:.1s}
+.m-root main > :nth-child(4){animation-delay:.15s}.m-root main > :nth-child(5){animation-delay:.2s}
+.m-root main > :nth-child(6){animation-delay:.25s}.m-root main > :nth-child(n+7){animation-delay:.3s}
+:where(svg[viewBox="-50 -50 100 100"]){animation-name:m-breathe;animation-duration:4.2s;animation-iteration-count:infinite;animation-timing-function:ease-in-out;transform-origin:50% 85%}
+svg[viewBox="-50 -50 100 100"] > circle[fill="#FFFFFF"]{animation:m-blink 5.2s infinite, m-look 9s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.m-count{counter-reset:m var(--m-n)}.m-count::after{content:counter(m)}
+.m-count{animation:m-count 1.1s cubic-bezier(.2,.8,.2,1) .15s both}
+.m-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+button{transition:transform .14s ease, background-color .2s ease, color .2s ease, opacity .2s ease}
+button:active{transform:scale(.97)}
+a{transition:color .2s ease, opacity .2s ease}
+:where(.m-root [style*="width:"][style*="%"]){transition:width .6s cubic-bezier(.2,.8,.2,1)}
+:where(.m-root label *, .m-root [role="switch"] *){transition:transform .22s cubic-bezier(.2,.8,.2,1), background-color .22s ease, opacity .22s ease}
+@keyframes m-react{0%{opacity:0;translate:0 1.5px}4%,16%{opacity:1;translate:0 0}20%,100%{opacity:0;translate:0 1px}}
+.m-r{opacity:0;animation:m-react var(--cy,16s) ease-in-out var(--dl,2s) infinite}
+@media (prefers-reduced-motion: reduce){.m-root,.m-root *,.m-root *::after{animation:none!important;transition:none!important}::view-transition-old(root),::view-transition-new(root){animation:none}.m-count{counter-reset:m var(--to)}}
+/* end motion pass */
+</style>
+</helmet>
+<div class="m-root" style="width: 390px; height: 844px; box-sizing: border-box; background: #D4D4D8; color: #18181B; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden">
+
+  <section role="dialog" aria-label="Shugaba is moving money" style="background: #FFFFFF; border-top: 1px solid #E4E4E7; border-radius: 32px 32px 0 0; padding: 32px 24px; display: flex; flex-direction: column; align-items: center; gap: 22px">
+    <svg style="overflow: visible" role="img" aria-label="Shugaba, guarding" width="96" height="96" viewBox="-50 -50 100 100"><path class="halo" d="M-27 -6 C-27 -26 -4 -31 10 -27 C27 -23 31 -6 28 9 C25 25 6 31 -8 29 C-23 27 -27 13 -27 -6 Z" transform="scale(1.32)" fill="none" stroke="#0070E0" stroke-width="2.4" vector-effect="non-scaling-stroke"></path><path d="M-27 -6 C-27 -26 -4 -31 10 -27 C27 -23 31 -6 28 9 C25 25 6 31 -8 29 C-23 27 -27 13 -27 -6 Z" fill="#3B358A"></path><g fill="#FFFFFF"><rect x="-11.5" y="-4.5" width="9" height="3" rx="1.5"></rect><rect x="6.5" y="-4.5" width="9" height="3" rx="1.5"></rect></g><g class="m-r" style="--cy: 10s; --dl: 1.6s"><path d="M-12.0 -11.0 L-2.0 -8.0" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round"></path><path d="M6.0 -8.0 L16.0 -11.0" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round"></path></g></svg>
+    <span class="num" style="font-size: 48px; font-weight: 800; letter-spacing: -1px">$300</span>
+    <span style="font-size: 16px; color: #71717A; margin-top: -14px">to Ngozi</span>
+
+    <ol style="list-style: none; margin: 0; padding: 0; align-self: stretch; display: flex; flex-direction: column; gap: 14px">
+      <li style="display: flex; align-items: center; gap: 12px; font-size: 16px"><span style="width: 26px; height: 26px; border-radius: 999px; background: #16A34A; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4 4 10-10"></path></svg></span>Rules checked</li>
+      <li style="display: flex; align-items: center; gap: 12px; font-size: 16px"><span style="width: 26px; height: 26px; border-radius: 999px; background: #16A34A; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4 4 10-10"></path></svg></span><span style="flex: 1">Pool covered Musa</span><span class="num" style="font-weight: 700">$50</span></li>
+      <li style="display: flex; align-items: center; gap: 12px; font-size: 16px"><span style="width: 26px; height: 26px; border-radius: 999px; background: #16A34A; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4 4 10-10"></path></svg></span>Sent with <b style="font-style: italic; margin-left: 4px">PayPal</b></li>
+      <li style="display: flex; align-items: center; gap: 12px; font-size: 16px; color: #71717A"><span style="width: 26px; height: 26px; box-sizing: border-box; border-radius: 999px; border: 3px solid #0070E0"></span>Recording in ledger</li>
+    </ol>
+
+    <a href="GLedger.dc.html" style="align-self: stretch; text-decoration: none; height: 54px; border-radius: 14px; background: #18181B; color: #FFFFFF; font-size: 16px; font-weight: 800; display: flex; align-items: center; justify-content: center">See receipt</a>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

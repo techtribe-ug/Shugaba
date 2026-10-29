@@ -106,4 +106,11 @@ describe.skipIf(!url)("golden path (mock)", () => {
     const [c] = await db.select().from(mod.s.circles).where(eq(mod.s.circles.id, mod.cast.FAMILY_CIRCLE_ID));
     expect(c!.bonusHeldBalance).toBe(0);
   });
+
+  it("rate limiter counts per key and window, and refuses past the limit", async () => {
+    const { rateLimit, RateLimitError } = await import("@/lib/security/rate-limit");
+    for (let i = 0; i < 3; i++) await rateLimit("test:rl", 3, 60);
+    await expect(rateLimit("test:rl", 3, 60)).rejects.toBeInstanceOf(RateLimitError);
+    await expect(rateLimit("test:other", 3, 60)).resolves.toBeUndefined();
+  });
 });

@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Payout calendar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Jost:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0070E0}a:hover{color:#003087}
+.num{font-variant-numeric:tabular-nums;font-family:'Jost','Plus Jakarta Sans',sans-serif}
+
+
+
+/* motion pass */
+@property --m-n{syntax:'<integer>';initial-value:0;inherits:false}
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:m-out .18s ease-in both}
+::view-transition-new(root){animation:m-in .32s cubic-bezier(.2,.8,.2,1) both}
+@keyframes m-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes m-out{to{opacity:0;transform:translateY(-4px)}}
+@keyframes m-breathe{0%,100%{scale:1 1}50%{scale:1.025 .985}}
+@keyframes m-look{0%,38%,100%{translate:0 0}42%,58%{translate:2px -.5px}62%,78%{translate:-1.5px 0}}
+@keyframes m-blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.12)}}
+@keyframes m-count{from{--m-n:0}to{--m-n:var(--to)}}
+:where(.m-root > :not(main)), :where(.m-root main > *){animation:m-in .5s cubic-bezier(.2,.8,.2,1) both}
+.m-root main > :nth-child(2){animation-delay:.05s}.m-root main > :nth-child(3){animation-delay:.1s}
+.m-root main > :nth-child(4){animation-delay:.15s}.m-root main > :nth-child(5){animation-delay:.2s}
+.m-root main > :nth-child(6){animation-delay:.25s}.m-root main > :nth-child(n+7){animation-delay:.3s}
+:where(svg[viewBox="-50 -50 100 100"]){animation-name:m-breathe;animation-duration:4.2s;animation-iteration-count:infinite;animation-timing-function:ease-in-out;transform-origin:50% 85%}
+svg[viewBox="-50 -50 100 100"] > circle[fill="#FFFFFF"]{animation:m-blink 5.2s infinite, m-look 9s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.m-count{counter-reset:m var(--m-n)}.m-count::after{content:counter(m)}
+.m-count{animation:m-count 1.1s cubic-bezier(.2,.8,.2,1) .15s both}
+.m-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+button{transition:transform .14s ease, background-color .2s ease, color .2s ease, opacity .2s ease}
+button:active{transform:scale(.97)}
+a{transition:color .2s ease, opacity .2s ease}
+:where(.m-root [style*="width:"][style*="%"]){transition:width .6s cubic-bezier(.2,.8,.2,1)}
+:where(.m-root label *, .m-root [role="switch"] *){transition:transform .22s cubic-bezier(.2,.8,.2,1), background-color .22s ease, opacity .22s ease}
+@keyframes m-react{0%{opacity:0;translate:0 1.5px}4%,16%{opacity:1;translate:0 0}20%,100%{opacity:0;translate:0 1px}}
+.m-r{opacity:0;animation:m-react var(--cy,16s) ease-in-out var(--dl,2s) infinite}
+@media (prefers-reduced-motion: reduce){.m-root,.m-root *,.m-root *::after{animation:none!important;transition:none!important}::view-transition-old(root),::view-transition-new(root){animation:none}.m-count{counter-reset:m var(--to)}}
+/* end motion pass */
+</style>
+</helmet>
+<div class="m-root" style="min-height: 760px; box-sizing: border-box; background: #FFFFFF; color: #18181B; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; padding: 40px 24px">
+<div style="max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 32px">
+
+  <div style="display: flex; align-items: center; gap: 10px; padding-bottom: 28px"><a href="GHome.dc.html" aria-label="Shugaba home" style="display: flex; align-items: center; gap: 9px; text-decoration: none; color: #18181B"><svg aria-hidden="true" width="26" height="26" viewBox="-50 -50 100 100" style="flex: none"><path d="M-27 -6 C-27 -26 -4 -31 10 -27 C27 -23 31 -6 28 9 C25 25 6 31 -8 29 C-23 27 -27 13 -27 -6 Z" fill="#3B358A"></path><circle cx="-7" cy="-3" r="3.9" fill="#FFFFFF"></circle><circle cx="11" cy="-3" r="3.9" fill="#FFFFFF"></circle></svg><span style="font-family: Jost, sans-serif; font-size: 20px; font-weight: 700; letter-spacing: -0.5px; line-height: 1">shugaba</span></a><span aria-hidden="true" style="width: 1px; height: 18px; background: #E4E4E7; margin: 0 6px"></span><span style="font-size: 14px; font-weight: 700; color: #71717A">Payout calendar</span></div>
+  <header style="display: flex; align-items: center; gap: 14px">
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <h1 style="margin: 0; font-size: 26px; font-weight: 800">Family Circle</h1>
+      <span style="font-size: 15px; color: #71717A">Ngozi gets $300 today. Musa was covered by the pool.</span>
+    </div>
+  </header>
+
+  <section aria-label="Turns" style="overflow-x: auto; padding: 12px 2px 4px 2px">
+    <div style="min-width: 860px; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; position: relative">
+      <div style="position: absolute; left: 8.3%; right: 8.3%; top: 58px; height: 2px; background: #E4E4E7"></div>
+      <div style="position: absolute; left: 8.3%; width: 16.7%; top: 58px; height: 2px; background: #D4D4D8"></div>
+      <sc-for list="{{rounds}}" as="r" hint-placeholder-count="6">
+        <button onClick="{{r.pick}}" aria-pressed="{{r.selected}}" style="position: relative; font-family: inherit; color: #18181B; background: transparent; border: 0; border-radius: 0; padding: 16px 8px 18px 8px; display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer">
+          <span class="num" style="font-size: 12px; font-weight: 600; color: #71717A">{{r.date}}</span>
+          <span style="position: relative; z-index: 1"><span style="position: relative; width: 52px; height: 52px; flex: none; display: block"><span aria-hidden="true" style="position: absolute; inset: -7px; border-radius: 999px; background: {{r.arc}}; -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3.5px), #000 calc(100% - 3px)); mask: radial-gradient(farthest-side, transparent calc(100% - 3.5px), #000 calc(100% - 3px))"></span><span style="display: block; width: 100%; height: 100%; border-radius: 999px; overflow: hidden; background: {{r.bg}}; box-shadow: {{r.ring}}"><svg aria-hidden="true" width="100%" height="100%" viewBox="0 0 64 64"><circle cx="32" cy="25" r="11" fill="{{r.fg}}"></circle><path d="M12 56c3-11 11-17 20-17s17 6 20 17a32 32 0 0 1-40 0Z" fill="{{r.fg}}"></path></svg></span><sc-if value="{{r.hasBadge}}" hint-placeholder-val="{{ true }}"><span style="position: absolute; right: -4px; bottom: -4px; width: 22px; height: 22px; border-radius: 999px; background: {{r.badgeBg}}; box-shadow: 0 0 0 2.5px #FFFFFF; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="{{r.icon}}"></path></svg></span></sc-if></span></span>
+          <span style="font-size: 15px; font-weight: 700">{{r.who}}</span>
+          <span style="font-size: 12px; font-weight: 600; color: {{r.stateFg}}">{{r.state}}</span>
+          <span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 999px; background: {{r.cardBg}}"></span>
+        </button>
+      </sc-for>
+    </div>
+  </section>
+
+  <section aria-label="Turn details" style="border-top: 1px solid #E4E4E7; padding-top: 28px; display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start">
+    <div style="flex: 1 1 260px; display: flex; flex-direction: column; gap: 6px">
+      <span class="num" style="font-size: 13px; font-weight: 600; color: #71717A">Turn {{sel.n}} · {{sel.date}}</span>
+      <span class="num" style="font-size: 36px; font-weight: 800; letter-spacing: -0.5px">$300 to {{sel.who}}</span>
+      <span style="font-size: 15px; color: #52525B">{{sel.summary}}</span>
+      <sc-if value="{{sel.swap}}" hint-placeholder-val="{{ false }}">
+        <a href="GSwap.dc.html" style="font-size: 14px; font-weight: 700; margin-top: 6px">Swap pending with {{sel.swapWith}}</a>
+      </sc-if>
+    </div>
+    <ul style="flex: 1 1 360px; list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column">
+      <sc-for list="{{sel.people}}" as="p" hint-placeholder-count="6">
+        <li style="display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid #F4F4F5">
+          <span style="width: 10px; height: 10px; box-sizing: border-box; border-radius: 999px; flex: none; background: {{p.fill}}; border: {{p.border}}"></span>
+          <span style="flex: 1; font-size: 15px; font-weight: 600">{{p.name}}</span>
+          <span style="font-size: 13px; color: #71717A">{{p.label}}</span>
+        </li>
+      </sc-for>
+    </ul>
+  </section>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":760}}'>
+class Component extends DCLogic {
+renderVals() {
+  var self = this;
+  var ST = {paidout: { bg: '#F4F4F5', fg: '#D4D4D8', ring: 'none', arc: 'none', badgeBg: '', icon: 'M5 12.5l4.5 4.5L19 7.5', hasBadge: false }, now: { bg: '#E4E4E7', fg: '#A1A1AA', ring: 'none', arc: 'none', badgeBg: '#16A34A', icon: 'M12 6.5v11M6.5 12h11', hasBadge: true }, paid: { bg: '#E4E4E7', fg: '#A1A1AA', ring: 'none', arc: 'none', badgeBg: '#16A34A', icon: 'M5 12.5l4.5 4.5L19 7.5', hasBadge: true }, late: { bg: '#E4E4E7', fg: '#A1A1AA', ring: '0 0 0 3px #FFFFFF, 0 0 0 5px #F2D9B3', arc: 'none', badgeBg: '#B26A00', icon: 'M12 7v5l3.5 2M12 3a9 9 0 1 0 0.01 0', hasBadge: true }, covered: { bg: '#E4E4E7', fg: '#A1A1AA', ring: 'none', arc: 'none', badgeBg: '#0070E0', icon: 'M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z', hasBadge: true }, due: { bg: '#E4E4E7', fg: '#A1A1AA', ring: 'none', arc: 'none', badgeBg: '', icon: '', hasBadge: false }};
+  var selN = (this.state && this.state.sel) || 2;
+  var names = ['Amina', 'Ngozi', 'Ifeoma', 'Sani', 'Tunde', 'Musa'];
+  var PAID = { fill: '#16A34A', border: '0', label: 'Paid $51' };
+  var COV = { fill: '#A1A1AA', border: '0', label: 'Covered by pool' };
+  var DUE = { fill: 'transparent', border: '2px solid #D4D4D8', label: 'Due' };
+  var rows = [
+    { date: '29 Oct', status: 'done', summary: 'Everyone paid. Sent 29 Oct.' },
+    { date: '5 Nov', status: 'today', summary: 'Musa missed. The pool covered his $50.' },
+    { date: '12 Nov', status: 'next', swap: 'Tunde', summary: 'Payments due 12 Nov.' },
+    { date: '19 Nov', status: 'next', summary: 'Payments due 19 Nov.' },
+    { date: '26 Nov', status: 'next', swap: 'Ifeoma', summary: 'Payments due 26 Nov.' },
+    { date: '3 Dec', status: 'next', summary: 'Last turn of the circle.' }
+  ];
+  function people(i) {
+    return names.map(function (nm) {
+      var s = i === 0 ? PAID : i === 1 ? (nm === 'Musa' ? COV : PAID) : DUE;
+      return { name: nm, fill: s.fill, border: s.border, label: s.label };
+    });
+  }
+  var rounds = rows.map(function (r, i) {
+    var n = i + 1, sel = n === selN;
+    var done = r.status === 'done', today = r.status === 'today', k = done ? 'paidout' : today ? 'now' : 'due';
+    return {
+      n: n, date: r.date, who: names[i], initial: names[i].charAt(0),
+      state: done ? 'Paid out' : today ? 'Today' : (r.swap ? 'Swap pending' : 'Upcoming'),
+      stateFg: today ? '#16A34A' : '#71717A',
+      bg: ST[k].bg, fg: ST[k].fg, ring: ST[k].ring, arc: ST[k].arc, badgeBg: ST[k].badgeBg, icon: ST[k].icon, hasBadge: ST[k].hasBadge,
+      cardBg: sel ? (today ? '#16A34A' : '#18181B') : 'transparent',
+      selected: sel ? 'true' : 'false',
+      pick: function () { self.setState({ sel: n }); }
+    };
+  });
+  var s = rows[selN - 1];
+  return { rounds: rounds, sel: { n: selN, date: s.date, who: names[selN - 1], summary: s.summary, swap: !!s.swap, swapWith: s.swap || '', people: people(selN - 1) } };
+}
+}
+</script>
+</body>
+</html>
