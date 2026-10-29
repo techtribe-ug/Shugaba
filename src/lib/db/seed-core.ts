@@ -65,6 +65,11 @@ export async function seedDemo(db: Db, opts: { now?: Date; clockSpeed?: number }
     await tx.delete(s.memberMemories).where(inArray(s.memberMemories.memberId, castIds));
     await tx.delete(s.proposals).where(inArray(s.proposals.memberId, castIds));
     await tx.delete(s.outboundMessages).where(inArray(s.outboundMessages.memberId, castIds));
+    // WhatsApp opt-ins (spec 10.9): Musa and Tunde said yes at join. Fake numbers; mock mode never sends.
+    await tx.delete(s.notificationChannels).where(inArray(s.notificationChannels.memberId, castIds));
+    for (const [key, phone] of [["musa", "+2348000000002"], ["tunde", "+447700900004"]] as const) {
+      await tx.insert(s.notificationChannels).values({ id: stableId(`whatsapp:${key}`), memberId: castId(key), channel: "whatsapp", phoneE164: phone, optedInAt: now, optInSource: "join" });
+    }
     await tx.delete(s.agentMessages).where(eq(s.agentMessages.circleId, FAMILY_CIRCLE_ID));
 
     // Global reserve and the demo clock.
