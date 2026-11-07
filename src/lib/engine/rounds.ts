@@ -9,6 +9,7 @@ import { completionEvent } from "@/lib/score";
 import { afterCollection, protectionFee, settleRound, transitionCircle, transitionRound, type SeatContribution } from "@/lib/treasury";
 import { now } from "./clock";
 import { poolMove } from "./pool";
+import { payoutNeedsReview } from "./fraud";
 import { changeScore } from "./score";
 import { EngineError } from "./types";
 
@@ -120,6 +121,14 @@ export async function settleAndPay(roundId: string) {
     const at = await now(tx);
     if (round.status === "GRACE") await tx.update(s.rounds).set({ status: transitionRound("GRACE", "SETTLING") }).where(eq(s.rounds.id, roundId));
     if (round.status === "HELD") await tx.update(s.rounds).set({ status: transitionRound("HELD", "SETTLING") }).where(eq(s.rounds.id, roundId));
+
+    // Fraud rule 2: a payment method changed just before this payout waits for an operator (spec 8.6).
+    if (await payoutNeedsReview(tx, circle.id, roundId, round.recipientMembershipId!, at)) {
+      await appendLedger(tx, circle.id, { type: "CIRCLE_PAUSED", reason: "payment method changed before payout; operator review" }, "worker", at);
+      await tx.update(s.rounds).set({ status: transitionRound("SETTLING", "HELD") }).where(eq(s.rounds.id, roundId));
+      if (circle.status === "ACTIVE") await tx.update(s.circles).set({ status: transitionCircle("ACTIVE", "PAUSED"), updatedAt: new Date() }).where(eq(s.circles.id, circle.id));
+      return { circleId: circle.id, paused: true as const };
+    }
 
     const cs = await tx.select().from(s.contributions).where(eq(s.contributions.roundId, roundId));
     const ms = await tx.select().from(s.memberships).where(eq(s.memberships.circleId, circle.id));

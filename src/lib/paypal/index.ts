@@ -39,3 +39,15 @@ export function resetMockProvider() {
   fresh.setSink((old as unknown as { sink: Parameters<MockProvider["setSink"]>[0] }).sink);
   g.__shugabaPayments = fresh;
 }
+
+/** Runs `fn` with a private mock provider, whatever PAYMENT_PROVIDER says. Used to seed history without touching PayPal. */
+export async function withMockProvider<T>(fn: (mock: MockProvider) => Promise<T>): Promise<T> {
+  const prev = g.__shugabaPayments;
+  const mock = new MockProvider();
+  g.__shugabaPayments = mock;
+  try {
+    return await fn(mock);
+  } finally {
+    g.__shugabaPayments = prev;
+  }
+}

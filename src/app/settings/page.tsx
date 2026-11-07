@@ -2,7 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BackBar } from "@/components/ui/top-bar";
 import { currentMember } from "@/lib/auth/session";
+import { whatsAppChannel } from "@/lib/notify/optin";
 import { logout } from "../actions";
+import { WhatsAppRow } from "./whatsapp";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +18,7 @@ export default async function Settings() {
     ["Language", LANG[me.language as keyof typeof LANG] ?? me.language],
     ["Country", me.country],
   ];
+  const wa = await whatsAppChannel(me.id);
   return (
     <div className="mx-auto flex min-h-dvh max-w-[560px] flex-col">
       <BackBar href="/home" title="Settings" />
@@ -28,6 +31,7 @@ export default async function Settings() {
             </div>
           ))}
         </dl>
+        <WhatsAppRow phone={wa && wa.optedInAt && !wa.optedOutAt ? wa.phoneE164 : null} />
         <Link href="/score" className="flex min-h-12 items-center justify-between border-b border-surface text-[15px] font-bold text-text no-underline">
           My score <span className="num text-muted">{me.circleScore}</span>
         </Link>
