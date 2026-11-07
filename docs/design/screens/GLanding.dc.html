@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Shugaba</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Jost:wght@500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0070E0}a:hover{color:#003087}
+.num{font-variant-numeric:tabular-nums;font-family:'Jost','Plus Jakarta Sans',sans-serif}
+button{font-family:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid #0070E0;outline-offset:2px}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
+.eye{animation:blink 4.5s infinite;transform-box:fill-box;transform-origin:center}
+@keyframes hop{0%,100%{transform:none}35%{transform:translateY(-14px)}60%{transform:translateY(0)}75%{transform:translateY(-5px)}}
+.hop{animation:hop 1.1s ease-out .3s 2}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.rise{animation:rise .6s ease-out both}
+@keyframes fall{0%{transform:translateY(-40px) rotate(0);opacity:0}15%{opacity:1}100%{transform:translateY(260px) rotate(200deg);opacity:0}}
+.fall{animation:fall 2.6s ease-in infinite}
+@media (prefers-reduced-motion: reduce){.eye,.hop,.rise,.fall{animation:none}}
+@keyframes flow{to{stroke-dashoffset:-18}}.flow{animation:flow 1s linear infinite}
+
+
+
+/* motion pass */
+@property --m-n{syntax:'<integer>';initial-value:0;inherits:false}
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:m-out .18s ease-in both}
+::view-transition-new(root){animation:m-in .32s cubic-bezier(.2,.8,.2,1) both}
+@keyframes m-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes m-out{to{opacity:0;transform:translateY(-4px)}}
+@keyframes m-breathe{0%,100%{scale:1 1}50%{scale:1.025 .985}}
+@keyframes m-look{0%,38%,100%{translate:0 0}42%,58%{translate:2px -.5px}62%,78%{translate:-1.5px 0}}
+@keyframes m-blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.12)}}
+@keyframes m-count{from{--m-n:0}to{--m-n:var(--to)}}
+:where(.m-root > :not(main)), :where(.m-root main > *){animation:m-in .5s cubic-bezier(.2,.8,.2,1) both}
+.m-root main > :nth-child(2){animation-delay:.05s}.m-root main > :nth-child(3){animation-delay:.1s}
+.m-root main > :nth-child(4){animation-delay:.15s}.m-root main > :nth-child(5){animation-delay:.2s}
+.m-root main > :nth-child(6){animation-delay:.25s}.m-root main > :nth-child(n+7){animation-delay:.3s}
+:where(svg[viewBox="-50 -50 100 100"]){animation-name:m-breathe;animation-duration:4.2s;animation-iteration-count:infinite;animation-timing-function:ease-in-out;transform-origin:50% 85%}
+svg[viewBox="-50 -50 100 100"] > circle[fill="#FFFFFF"]{animation:m-blink 5.2s infinite, m-look 9s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.m-count{counter-reset:m var(--m-n)}.m-count::after{content:counter(m)}
+.m-count{animation:m-count 1.1s cubic-bezier(.2,.8,.2,1) .15s both}
+.m-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+button{transition:transform .14s ease, background-color .2s ease, color .2s ease, opacity .2s ease}
+button:active{transform:scale(.97)}
+a{transition:color .2s ease, opacity .2s ease}
+:where(.m-root [style*="width:"][style*="%"]){transition:width .6s cubic-bezier(.2,.8,.2,1)}
+:where(.m-root label *, .m-root [role="switch"] *){transition:transform .22s cubic-bezier(.2,.8,.2,1), background-color .22s ease, opacity .22s ease}
+@keyframes m-react{0%{opacity:0;translate:0 1.5px}4%,16%{opacity:1;translate:0 0}20%,100%{opacity:0;translate:0 1px}}
+.m-r{opacity:0;animation:m-react var(--cy,16s) ease-in-out var(--dl,2s) infinite}
+@media (prefers-reduced-motion: reduce){.m-root,.m-root *,.m-root *::after{animation:none!important;transition:none!important}::view-transition-old(root),::view-transition-new(root){animation:none}.m-count{counter-reset:m var(--to)}}
+/* end motion pass */
+</style>
+</helmet>
+<div class="m-root" style="width: 1280px; height: 860px; box-sizing: border-box; background: #FFFFFF; color: #18181B; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden; position: relative">
+
+<div style="padding: 32px 72px; display: flex; flex-direction: column; flex: 1">
+  <header style="display: flex; align-items: center"><span style="display: flex; align-items: center; gap: 9px"><svg class="" aria-hidden="true" width="28" height="28" viewBox="-50 -50 100 100" style="flex: none; overflow: visible"><path d="M-27 -6 C-27 -26 -4 -31 10 -27 C27 -23 31 -6 28 9 C25 25 6 31 -8 29 C-23 27 -27 13 -27 -6 Z" fill="#3B358A"></path><circle class="eye" cx="-7" cy="-3" r="4" fill="#FFFFFF"></circle><circle class="eye" cx="11" cy="-3" r="4" fill="#FFFFFF"></circle></svg><span style="font-family: Jost, sans-serif; font-size: 22px; font-weight: 700; letter-spacing: -0.5px">shugaba</span></span><span style="flex: 1"></span><a href="GVerify.dc.html" style="font-size: 15px; font-weight: 700; text-decoration: none; color: #18181B">Public ledger</a></header>
+  <div style="flex: 1; display: grid; grid-template-columns: 1fr 420px; gap: 64px; align-items: center">
+    <div style="display: flex; flex-direction: column; gap: 22px">
+      <h1 class="num" style="margin: 0; font-size: 72px; font-weight: 700; letter-spacing: -2.5px; line-height: 1">Your savings circle, looked after.</h1>
+      <p style="margin: 0; font-size: 20px; color: #71717A; line-height: 1.45; max-width: 520px">Six friends, one pot, a payout every week. Shugaba collects, protects and pays out on <span style="font-weight: 800; font-style: italic">PayPal</span>.</p>
+      <div style="display: flex; align-items: center; gap: 24px; margin-top: 10px">
+        <a href="GJudge.dc.html" style="height: 58px; padding: 0 32px; border-radius: 14px; background: #18181B; color: #FFFFFF; font-size: 17px; font-weight: 800; display: flex; align-items: center; text-decoration: none">Try the demo</a>
+        <a href="GWelcome.dc.html" style="font-size: 16px; font-weight: 700; text-decoration: none; color: #18181B">Start a circle</a>
+      </div>
+    </div>
+    <div style="position: relative; width: 420px; height: 420px">
+      <svg aria-hidden="true" width="420" height="420" style="position: absolute; inset: 0"><circle cx="210" cy="210" r="150" fill="none" stroke="#F4F4F5" stroke-width="3"></circle>
+        <line class="flow" x1="210" y1="210" x2="340" y2="135" stroke="#16A34A" stroke-width="2.5" stroke-dasharray="1 8" stroke-linecap="round"></line></svg>
+      <span style="position: absolute; left: 150px; top: 150px"><svg class="" role="img" aria-label="Shugaba" width="120" height="120" viewBox="-50 -50 100 100" style="flex: none; overflow: visible"><path d="M-27 -6 C-27 -26 -4 -31 10 -27 C27 -23 31 -6 28 9 C25 25 6 31 -8 29 C-23 27 -27 13 -27 -6 Z" fill="#3B358A"></path><circle class="eye" cx="-4" cy="-5" r="4" fill="#FFFFFF"></circle><circle class="eye" cx="14" cy="-5" r="4" fill="#FFFFFF"></circle><g class="m-r" style="--cy: 24s; --dl: 1.6s"><circle cx="-4.0" cy="-5.0" r="7.6" fill="none" stroke="#FFFFFF" stroke-width="1.8"></circle><circle cx="14.0" cy="-5.0" r="7.6" fill="none" stroke="#FFFFFF" stroke-width="1.8"></circle><path d="M3.6 -6.0 Q5.0 -9.3 6.4 -6.0" fill="none" stroke="#FFFFFF" stroke-width="1.8"></path></g><g class="m-r" style="--cy: 24s; --dl: 7.6s"><path d="M20.5 -7.2 l3 -2 M21.0 -3.9 l3.4 0 M20.5 -0.7 l3 2 M-10.5 -7.2 l-3 -2 M-11.0 -3.9 l-3.4 0 M-10.5 -0.7 l-3 2" fill="none" stroke="#FFFFFF" stroke-opacity=".6" stroke-width="1.2" stroke-linecap="round"></path><path d="M0.0 10.1 Q5.0 14.5 10.0 10.1" fill="none" stroke="#FFFFFF" stroke-width="2.0" stroke-linecap="round"></path></g><g class="m-r" style="--cy: 24s; --dl: 13.6s"><path d="M-9.4 -12.6 Q-4.0 -16.4 1.4 -13.1" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round"></path><path d="M8.6 -12.6 Q14.0 -16.4 19.4 -13.1" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round"></path></g><g class="m-r" style="--cy: 24s; --dl: 19.6s"><path d="M-17 -24 Q-17 -38 2 -38 Q20 -38 20 -25 Q2 -30 -17 -24 Z" fill="#FFFFFF" stroke="#E4E4E7" stroke-width="1"></path><path d="M-15 -28 Q2 -33 18 -29" fill="none" stroke="#C98E12" stroke-width="1.6" stroke-dasharray="2 2"></path></g></svg></span>
+      <span style="position: absolute; left: 178px; top: 28px"><span style="position: relative; width: 64px; height: 64px; display: block; flex: none"><span style="display: block; width: 100%; height: 100%; border-radius: 999px; overflow: hidden; background: #E4E4E7"><svg aria-hidden="true" width="100%" height="100%" viewBox="0 0 64 64"><circle cx="32" cy="25" r="11" fill="#A1A1AA"></circle><path d="M12 56c3-11 11-17 20-17s17 6 20 17a32 32 0 0 1-40 0Z" fill="#A1A1AA"></path></svg></span></span></span><span style="position: absolute; left: 308px; top: 103px"><span style="position: relative; width: 64px; height: 64px; display: block; flex: none"><span style="display: block; width: 100%; height: 100%; border-radius: 999px; overflow: hidden; background: #E4E4E7"><svg aria-hidden="true" width="100%" height="100%" viewBox="0 0 64 64"><circle cx="32" cy="25" r="11" fill="#A1A1AA"></circle><path d="M12 56c3-11 11-17 20-17s17 6 20 17a32 32 0 0 1-40 0Z" fill="#A1A1AA"></path></svg></span><span aria-hidden="true" style="position: absolute; right: -3px; bottom: -3px; box-shadow: 0 0 0 2.5px #FFFFFF; width: 22px; height: 22px; flex: none; border-radius: 999px; background: #16A34A; display: flex; align-items: center; justify-content: center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5v11M6.5 12h11"></path></svg></span></span></span><span style="position: absolute; left: 308px; top: 253px"><span style="position: relative; width: 64px; height: 64px; display: block; flex: none"><span style="display: block; width: 100%; height: 100%; border-radius: 999px; overflow: hidden; background: #E4E4E7"><svg aria-hidden="true" width="100%" height="100%" viewBox="0 0 64 64"><circle cx="32" cy="25" r="11" fill="#A1A1AA"></circle><path d="M12 56c3-11 11-17 20-17s17 6 20 17a32 32 0 0 1-40 0Z" fill="#A1A1AA"></path></svg></span><span aria-hidden="true" style="position: absolute; right: -3px; bottom: -3px; box-shadow: 0 0 0 2.5px #FFFFFF; width: 22px; height: 22px; flex: none; border-radius: 999px; background: #16A34A; display: flex; align-items: center; justify-content: center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span></span></span><span style="position: absolute; left: 178px; top: 328px"><span style="position: relative; width: 64px; height: 64px; display: block; flex: none"><span style="display: block; width: 100%; height: 100%; border-radius: 999px; overflow: hidden; background: #E4E4E7"><svg aria-hidden="true" width="100%" height="100%" viewBox="0 0 64 64"><circle cx="32" cy="25" r="11" fill="#A1A1AA"></circle><path d="M12 56c3-11 11-17 20-17s17 6 20 17a32 32 0 0 1-40 0Z" fill="#A1A1AA"></path></svg></span><span aria-hidden="true" style="position: absolute; right: -3px; bottom: -3px; box-shadow: 0 0 0 2.5px #FFFFFF; width: 22px; height: 22px; flex: none; border-radius: 999px; background: #16A34A; display: flex; align-items: center; justify-content: center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span></span></span><span style="position: absolute; left: 48px; top: 253px"><span style="position: relative; width: 64px; height: 64px; display: block; flex: none"><span style="display: block; width: 100%; height: 100%; border-radius: 999px; overflow: hidden; background: #E4E4E7"><svg aria-hidden="true" width="100%" height="100%" viewBox="0 0 64 64"><circle cx="32" cy="25" r="11" fill="#A1A1AA"></circle><path d="M12 56c3-11 11-17 20-17s17 6 20 17a32 32 0 0 1-40 0Z" fill="#A1A1AA"></path></svg></span><span aria-hidden="true" style="position: absolute; right: -3px; bottom: -3px; box-shadow: 0 0 0 2.5px #FFFFFF; width: 22px; height: 22px; flex: none; border-radius: 999px; background: #16A34A; display: flex; align-items: center; justify-content: center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span></span></span><span style="position: absolute; left: 48px; top: 103px"><span style="position: relative; width: 64px; height: 64px; display: block; flex: none"><span style="display: block; width: 100%; height: 100%; border-radius: 999px; overflow: hidden; background: #E4E4E7"><svg aria-hidden="true" width="100%" height="100%" viewBox="0 0 64 64"><circle cx="32" cy="25" r="11" fill="#A1A1AA"></circle><path d="M12 56c3-11 11-17 20-17s17 6 20 17a32 32 0 0 1-40 0Z" fill="#A1A1AA"></path></svg></span></span></span>
+    </div>
+  </div>
+  <section style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px; padding-top: 32px; border-top: 1px solid #E4E4E7"><div style="display: flex; flex-direction: column; gap: 10px"><span aria-hidden="true" style=" width: 30px; height: 30px; flex: none; border-radius: 999px; background: #0070E0; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"></path></svg></span><span style="font-size: 17px; font-weight: 800">Never short</span><span style="font-size: 15px; color: #71717A; line-height: 1.45">If someone misses, the pool pays. Payouts are always full.</span></div><div style="display: flex; flex-direction: column; gap: 10px"><span aria-hidden="true" style=" width: 30px; height: 30px; flex: none; border-radius: 999px; background: #16A34A; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span><span style="font-size: 17px; font-weight: 800">Every dollar public</span><span style="font-size: 15px; color: #71717A; line-height: 1.45">Anyone can check the ledger against PayPal.</span></div><div style="display: flex; flex-direction: column; gap: 10px"><span aria-hidden="true" style=" width: 30px; height: 30px; flex: none; border-radius: 999px; background: #3B358A; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6-5.3-3-5.3 3 1.2-6L3.4 9.3l6-.7z"></path></svg></span><span style="font-size: 17px; font-weight: 800">Pebble runs it</span><span style="font-size: 15px; color: #71717A; line-height: 1.45">Reminders, swaps and catch-up plans, in Hausa or English.</span></div></section>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":860}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
