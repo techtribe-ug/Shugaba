@@ -1,0 +1,67 @@
+# Render Blueprint: one free web service running Next.js with the worker in-process (spec 4).
+# Secrets are marked sync: false and set in the Render dashboard, never in git.
+services:
+  - type: web
+    name: shugaba-demo
+    runtime: node
+    plan: free
+    region: frankfurt
+    branch: main
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
+    startCommand: pnpm db:migrate && pnpm db:seed --if-empty && pnpm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DEMO_MODE
+        value: "true"
+      - key: DEMO_ALLOWED_HOSTS
+        value: localhost,shugaba-demo.onrender.com
+      - key: NEXT_PUBLIC_SITE_URL
+        value: https://shugaba-demo.onrender.com
+      - key: RUN_WORKER
+        value: "true"
+      - key: CLOCK_SPEED
+        value: "1"
+      - key: PAYMENT_PROVIDER
+        value: mock
+      - key: COLLECTION_MODE
+        value: vault
+      - key: PAYPAL_API_BASE
+        value: https://api-m.sandbox.paypal.com
+      - key: LLM_PROVIDER
+        value: mock
+      - key: LLM_REPLAY
+        value: "true"
+      - key: WHATSAPP_MODE
+        value: mock
+      - key: DATABASE_URL
+        sync: false
+      - key: KEY_ENC_SECRET
+        sync: false
+      - key: SESSION_SECRET
+        sync: false
+      - key: GOOGLE_GENERATIVE_AI_API_KEY
+        sync: false
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: PAYPAL_WEBHOOK_ID
+        sync: false
+      - key: NEXT_PUBLIC_PAYPAL_CLIENT_ID
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: WHATSAPP_PHONE_NUMBER_ID
+        sync: false
+      - key: WHATSAPP_ACCESS_TOKEN
+        sync: false
+      - key: WHATSAPP_APP_SECRET
+        sync: false
+      - key: WHATSAPP_VERIFY_TOKEN
+        sync: false
