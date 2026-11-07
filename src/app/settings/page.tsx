@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { and, eq, inArray } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import * as s from "@/lib/db/schema";
 import { redirect } from "next/navigation";
 import { BackBar } from "@/components/ui/top-bar";
 import { currentMember } from "@/lib/auth/session";
@@ -19,6 +22,7 @@ export default async function Settings() {
     ["Country", me.country],
   ];
   const wa = await whatsAppChannel(me.id);
+  const circles = await db().select({ id: s.circles.id, name: s.circles.name }).from(s.memberships).innerJoin(s.circles, eq(s.circles.id, s.memberships.circleId)).where(and(eq(s.memberships.memberId, me.id), inArray(s.memberships.status, ["SIGNED", "ACTIVE", "PAUSED"]), inArray(s.circles.status, ["FORMING", "ACTIVE", "PAUSED"])));
   return (
     <div className="mx-auto flex min-h-dvh max-w-[560px] flex-col">
       <BackBar href="/home" title="Settings" />
@@ -35,6 +39,11 @@ export default async function Settings() {
         <Link href="/score" className="flex min-h-12 items-center justify-between border-b border-surface text-[15px] font-bold text-text no-underline">
           My score <span className="num text-muted">{me.circleScore}</span>
         </Link>
+        {circles.map((c) => (
+          <Link key={c.id} href={`/c/${c.id}/leave`} className="flex min-h-14 items-center justify-between border-b border-surface text-[15px] font-bold text-failed no-underline">
+            Leave {c.name}
+          </Link>
+        ))}
         <form action={logout} className="mt-auto">
           <button className="flex h-13 w-full items-center justify-center text-[15px] font-bold text-failed">Log out</button>
         </form>

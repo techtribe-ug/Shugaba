@@ -2,11 +2,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { joinAction } from "@/app/actions";
+import { joinAction, lateJoinAction } from "@/app/actions";
 import { Icon } from "@/components/icons";
 import { btnPrimary, PayPalWord } from "@/components/ui/top-bar";
 
-export function JoinButton({ code, full, forming }: { code: string; full: boolean; forming: boolean }) {
+export function JoinButton({ code, full, forming, late = false }: { code: string; full: boolean; forming: boolean; late?: boolean }) {
   const router = useRouter();
   const [agreed, setAgreed] = useState(false);
   const [pending, start] = useTransition();
@@ -28,7 +28,7 @@ export function JoinButton({ code, full, forming }: { code: string; full: boolea
           title={agreed ? undefined : "Tick I agree first"}
           onClick={() =>
             start(async () => {
-              const r = await joinAction(code, agreed);
+              const r = await (late ? lateJoinAction : joinAction)(code, agreed);
               if (!r.ok) return setError(r.error);
               if (r.approvalUrl) window.location.href = r.approvalUrl;
               else router.push(`/c/${r.circleId}`);

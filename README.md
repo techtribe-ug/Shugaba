@@ -120,7 +120,7 @@ To use real services, fill in the PayPal sandbox, Gemini and WhatsApp keys in `.
 
 ### Known issues
 
-- Leaving a circle and joining late are designed (spec 8.7) and the late-join maths is in `src/lib/treasury/late-join.ts`, but there are no screens for them yet.
+- A late joiner takes an open seat through the invite link; the owner does not approve them separately yet.
 - Subscription-mode collection is wired in the provider but not used by the worker. Vault mode is the default.
 - Hausa prompts need a native speaker's review.
 

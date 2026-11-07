@@ -20,7 +20,8 @@ describe.skipIf(!url)("golden path (mock)", () => {
     const s = await import("@/lib/db/schema");
     const { readChain } = await import("@/lib/db/ledger");
     const { verifyChain } = await import("@/lib/treasury");
-    return { client, runMigrations, seedDemo, golden, cast, s, readChain, verifyChain };
+    const { stableId } = await import("@/lib/ids");
+    return { client, runMigrations, seedDemo, golden, cast, s, readChain, verifyChain, stableId };
   }
 
   beforeAll(async () => {
@@ -132,4 +133,86 @@ describe.skipIf(!url)("golden path (mock)", () => {
     expect(r!.status).toBe("PAID_OUT");
     for (const c of await db.select({ id: mod.s.circles.id }).from(mod.s.circles)) expect(await mod.verifyChain(await mod.readChain(db, c.id))).toMatchObject({ ok: true });
   }, 120_000);
+
+  describe("leaving and joining late (spec 8.7)", () => {
+    const ids = (from: number, n: number) => Array.from({ length: n }, (_, i) => mod.stableId(`member:history:${from + i}`));
+    async function startCircle(name: string) {
+      const e = await import("@/lib/engine");
+      const { db } = mod.client.getConn();
+      const people = ids(36, 4);
+      const c = await e.createCircle(people[0]!, { name, contributionAmount: 10_000, size: 4, frequency: "WEEKLY", protectionTier: "STANDARD", graceHours: 48 });
+      const [own] = await db.select().from(mod.s.memberships).where(eq(mod.s.memberships.circleId, c.id));
+      await e.startMandate(own!.id);
+      for (const id of people.slice(1)) await e.joinCircle(id, c.inviteCode);
+      await e.acceptOrderAndStart(c.id, people[0]!);
+      const rounds = async () => db.select().from(mod.s.rounds).where(eq(mod.s.rounds.circleId, c.id)).orderBy(asc(mod.s.rounds.seq));
+      const play = async (seq: number) => {
+        const r = (await rounds()).find((x) => x.seq === seq)!;
+        await e.collectRound(r.id);
+        await e.settleAndPay(r.id);
+      };
+      const atTurn = async (seq: number) => (await rounds()).find((x) => x.seq === seq)!.recipientMembershipId!;
+      const membership = async (id: string) => (await db.select().from(mod.s.memberships).where(eq(mod.s.memberships.id, id)))[0]!;
+      const memberOf = async (membershipId: string) => (await membership(membershipId)).memberId;
+      const circle = async () => (await db.select().from(mod.s.circles).where(eq(mod.s.circles.id, c.id)))[0]!;
+      const paid = async () => {
+        const rs = await rounds();
+        const ps = await db.select().from(mod.s.payouts);
+        return rs.map((r) => ps.find((p) => p.roundId === r.id)?.amount ?? 0);
+      };
+      const chainOk = async () => (await mod.verifyChain(await mod.readChain(db, c.id))).ok;
+      return { id: c.id, e, play, atTurn, membership, memberOf, circle, paid, chainOk };
+    }
+
+    it("leaves before collecting, nobody joins: the seat's turn refunds the leaver and refills the pool", async () => {
+      const k = await startCircle("Leave, no joiner");
+      await k.play(1);
+      const leaver = await k.atTurn(3);
+      const terms = await k.e.leaveTerms(leaver);
+      expect(terms).toMatchObject({ kind: "refund", refund: 10_000, feesKept: 200, shortNotice: false });
+      await k.e.leaveCircle(leaver, await k.memberOf(leaver));
+      for (const seq of [2, 3, 4]) await k.play(seq);
+      expect(await k.paid()).toEqual([40_000, 40_000, 10_000, 40_000]);
+      expect((await k.membership(leaver)).refundPaid).toBe(10_000);
+      const c = await k.circle();
+      expect(c.status).toBe("COMPLETED");
+      expect(c.reserveOwed).toBe(0);
+      expect(c.poolBalance).toBe(13 * 150); // every cover repaid; only fees remain
+      expect(await k.chainOk()).toBe(true);
+    });
+
+    it("a late joiner takes the seat: missed rounds are held back and refund the leaver", async () => {
+      const k = await startCircle("Leave, joiner");
+      await k.play(1);
+      const leaver = await k.atTurn(4);
+      await k.e.leaveCircle(leaver, await k.memberOf(leaver));
+      const seat = await k.e.openSeat(k.id);
+      expect(seat?.terms).toMatchObject({ missedRounds: 1, holdback: 10_000, payout: 30_000, swapWithLastTurn: false });
+      const joiner = await k.e.joinOpenSeat(mod.cast.castId("sani"), k.id);
+      expect(await k.atTurn(4)).toBe(joiner.membershipId);
+      for (const seq of [2, 3, 4]) await k.play(seq);
+      expect(await k.paid()).toEqual([40_000, 40_000, 40_000, 30_000]);
+      expect((await k.membership(leaver)).refundPaid).toBe(10_000);
+      const c = await k.circle();
+      expect(c.status).toBe("COMPLETED");
+      expect(c.poolBalance).toBe(16 * 150);
+      expect(await k.chainOk()).toBe(true);
+    });
+
+    it("leaves after collecting: what is still owed becomes one invoice; paying it lets the pool cover the seat", async () => {
+      const k = await startCircle("Leave after collecting");
+      await k.play(1);
+      const leaver = await k.atTurn(1);
+      expect(await k.e.leaveTerms(leaver)).toMatchObject({ kind: "owes", stillToPay: 30_000, turnsLeft: 3 });
+      const out = await k.e.leaveCircle(leaver, await k.memberOf(leaver));
+      await k.e.applyRecoveryPayment(out.recoveryId!, 30_000, "test-leave");
+      for (const seq of [2, 3, 4]) await k.play(seq);
+      expect(await k.paid()).toEqual([40_000, 40_000, 40_000, 40_000]);
+      const c = await k.circle();
+      expect(c.status).toBe("COMPLETED");
+      expect(c.reserveOwed).toBe(0);
+      expect(c.poolBalance).toBe(13 * 150);
+      expect(await k.chainOk()).toBe(true);
+    });
+  });
 });

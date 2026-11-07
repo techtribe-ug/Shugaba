@@ -35,6 +35,8 @@ export const LedgerEventPayload = z.discriminatedUnion("type", [
   z.object({ type: z.literal("LEAVER_REFUND_SCHEDULED"), membershipId: id, amount: Cents, onRoundSeq: z.number().int() }),
   z.object({ type: z.literal("LEAVER_REFUND_PAID"), membershipId: id, amount: PositiveCents }),
   z.object({ type: z.literal("SEAT_FILLED"), membershipId: id, seq: z.number().int(), missedRounds: z.number().int() }),
+  // The open seat's turn came with nobody in it: the leaver's refund is paid and the rest of the pot refills the pool.
+  z.object({ type: z.literal("OPEN_SEAT_POT"), roundId: id, membershipId: id, toLeaverRefund: Cents, toPool: Cents }),
   z.object({ type: z.literal("JOINER_HOLDBACK"), membershipId: id, amount: PositiveCents, toPool: Cents, toLeaverRefund: Cents }),
   z.object({ type: z.literal("OPERATOR_ACTION"), operatorId: id, action: z.string(), reason: z.string().min(3) }),
 ]);
