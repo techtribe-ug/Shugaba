@@ -8,7 +8,7 @@ import { CreateCircleInput } from "@/lib/protocol";
 import { clearSession, currentMember, sessionFreshForMoney, setSession } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
 import { members } from "@/lib/db/schema";
-import { acceptOrderAndStart, createCircle, EngineError, joinCircle, signTrade } from "@/lib/engine";
+import { acceptOrderAndStart, createCircle, EngineError, joinCircle, requestSwap, signTrade } from "@/lib/engine";
 import { CAST, castId, OPERATOR_ID } from "@/lib/demo/cast";
 import { rateLimit } from "@/lib/security/rate-limit";
 
@@ -91,6 +91,20 @@ export async function signTradeAction(tradeId: string): Promise<ActionResult> {
     await rateLimit(`money:${me.id}`, 10, 60);
     const r = await signTrade(z.string().min(1).parse(tradeId), me.id);
     return { ok: true, message: r.confirmed ? "Swap confirmed." : "Signed. Waiting for the other member." };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/** Calendar: the member asks for an earlier turn (drag onto it, or the button on that turn). */
+export async function requestSwapAction(circleId: string, targetSeq: number | null, reason: string): Promise<ActionResult & { tradeId?: string; agreed?: boolean }> {
+  const me = await requireMember();
+  try {
+    await rateLimit(`money:${me.id}`, 10, 60);
+    const input = z.object({ circleId: z.string().min(1), targetSeq: z.number().int().positive().nullable(), reason: z.string().trim().min(1).max(280) }).parse({ circleId, targetSeq, reason });
+    const r = await requestSwap({ circleId: input.circleId, memberId: me.id, reason: input.reason, targetSeq: input.targetSeq ?? undefined });
+    revalidatePath(`/c/${input.circleId}`, "layout");
+    return { ok: true, tradeId: r.tradeId, agreed: r.agreed, message: r.agreed ? "An agent agreed. Check the terms and sign." : "No one could swap within their limits right now." };
   } catch (e) {
     return fail(e);
   }

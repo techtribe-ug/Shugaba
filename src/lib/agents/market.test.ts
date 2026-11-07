@@ -22,4 +22,10 @@ describe("Turn Market", () => {
     const r = await negotiate({ requester: m("t", 5, { maxBonus: 100000 }), others: [m("i", 3, { acceptSwapLater: true, minBonusBps: 500 })], pot: 30000, reason: "x" });
     expect(r.terms?.bonus).toBe(1500);
   });
+  it("a targeted request only asks the member whose turn was picked", async () => {
+    const others = [m("ifeoma", 3, { acceptSwapLater: true, minBonusBps: 150 }), m("sani", 4, { acceptSwapLater: true })];
+    const r = await negotiate({ requester: m("tunde", 5, { maxBonus: 500 }), others, pot: 30000, reason: "x", targetMembershipId: "ifeoma" });
+    expect(r.terms?.toMembershipId).toBe("ifeoma");
+    expect(r.transcript.map((t) => t.msg.kind)).toEqual(["SWAP_REQUEST", "OFFER", "AGREE"]);
+  });
 });
