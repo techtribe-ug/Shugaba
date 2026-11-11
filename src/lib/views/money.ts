@@ -66,7 +66,7 @@ export async function moneyView(circleId: string, memberId: string) {
     if (!r || c.status === "SCHEDULED") continue;
     const status = ({ PAID: "paid", LATE: "late", FAILED: "failed", COVERED: "covered", RECOVERED: "recovered" } as const)[c.status as "PAID" | "LATE" | "FAILED" | "COVERED" | "RECOVERED"];
     const label = { paid: "Paid", late: "Paid in grace", failed: "Didn't go through", covered: "Covered by the pool", recovered: "Paid back" }[status];
-    rows.push({ kind: "contribution", title: `Round ${r.seq} contribution`, detail: label, amount: c.amount + c.feeAmount, sign: status === "failed" || status === "covered" ? "none" : "out", status, ref: c.providerRef, at: c.updatedAt });
+    rows.push({ kind: "contribution", title: `Round ${r.seq} contribution`, detail: label, amount: c.amount + c.feeAmount, sign: status === "failed" || status === "covered" ? "none" : "out", status, ref: c.providerRef, at: c.updatedAt, href: `/c/${circleId}/money/receipt/${c.id}` });
   }
   for (const p of payouts) {
     const r = seqOf.get(p.roundId);

@@ -40,12 +40,16 @@ export async function dispatchNotifications() {
     const [max] = await db.select({ seq: s.ledgerEvents.seq }).from(s.ledgerEvents).orderBy(desc(s.ledgerEvents.seq)).limit(1);
     g.__shugabaNotifySeq = Math.max(0, (max?.seq ?? 0) - 200);
   }
-  const events = await db.select().from(s.ledgerEvents).where(and(gt(s.ledgerEvents.seq, g.__shugabaNotifySeq), inArray(s.ledgerEvents.type, ["CONTRIBUTION_FAILED", "PAYOUT_CONFIRMED"]))).orderBy(asc(s.ledgerEvents.seq)).limit(200);
+  const events = await db.select().from(s.ledgerEvents).where(and(gt(s.ledgerEvents.seq, g.__shugabaNotifySeq), inArray(s.ledgerEvents.type, ["CONTRIBUTION_FAILED", "CONTRIBUTION_PAID", "PAYOUT_CONFIRMED"]))).orderBy(asc(s.ledgerEvents.seq)).limit(200);
   for (const e of events) {
     const p = e.payloadJson as Record<string, unknown>;
     if (e.type === "CONTRIBUTION_FAILED") {
       const [row] = await db.select({ memberId: s.memberships.memberId, circle: s.circles.name, circleId: s.circles.id, graceEndsAt: s.rounds.graceEndsAt }).from(s.contributions).innerJoin(s.memberships, eq(s.memberships.id, s.contributions.membershipId)).innerJoin(s.circles, eq(s.circles.id, s.memberships.circleId)).innerJoin(s.rounds, eq(s.rounds.id, s.contributions.roundId)).where(eq(s.contributions.id, String(p.contributionId)));
       if (row) await sendNotice({ memberId: row.memberId, template: "payment_failed", params: [row.circle, day(row.graceEndsAt), `${site()}/c/${row.circleId}/chat`], ledgerSeq: e.seq });
+    }
+    if (e.type === "CONTRIBUTION_PAID") {
+      const [row] = await db.select({ memberId: s.memberships.memberId, circle: s.circles.name, circleId: s.circles.id, amount: s.contributions.amount, fee: s.contributions.feeAmount, seq: s.rounds.seq }).from(s.contributions).innerJoin(s.memberships, eq(s.memberships.id, s.contributions.membershipId)).innerJoin(s.circles, eq(s.circles.id, s.memberships.circleId)).innerJoin(s.rounds, eq(s.rounds.id, s.contributions.roundId)).where(eq(s.contributions.id, String(p.contributionId)));
+      if (row) await sendNotice({ memberId: row.memberId, template: "payment_received", params: [formatCents(row.amount + row.fee), row.circle, String(row.seq), `${site()}/c/${row.circleId}/money`], ledgerSeq: e.seq });
     }
     if (e.type === "PAYOUT_CONFIRMED") {
       const [row] = await db.select({ memberId: s.memberships.memberId, amount: s.payouts.amount, circle: s.circles.name }).from(s.payouts).innerJoin(s.rounds, eq(s.rounds.id, s.payouts.roundId)).innerJoin(s.memberships, eq(s.memberships.id, s.rounds.recipientMembershipId)).innerJoin(s.circles, eq(s.circles.id, s.rounds.circleId)).where(eq(s.payouts.id, String(p.payoutId)));

@@ -8,6 +8,8 @@ import { TabBar } from "@/components/ui/tab-bar";
 import { currentMember } from "@/lib/auth/session";
 import { formatCents } from "@/lib/protocol";
 import { moneyView, type MoneyRow } from "@/lib/views/money";
+import { whatsAppLive } from "@/lib/notify/channels";
+import { WaAlertsTeaser } from "@/components/whatsapp";
 import { payNow } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -157,6 +159,7 @@ export default async function Money({ params, searchParams }: { params: Promise<
           )}
         </section>
         <Link href={`/c/${id}/ledger`} className="text-center text-[15px] font-bold text-accent">See the whole circle&apos;s ledger</Link>
+        {whatsAppLive() ? null : <WaAlertsTeaser />}
       </main>
       <TabBar circleId={id} active="money" />
     </div>

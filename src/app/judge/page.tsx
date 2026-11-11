@@ -54,7 +54,7 @@ export default async function Judge() {
       />
       {sent.length ? (
         <section aria-label="WhatsApp" className="mt-12">
-          <h2 className="text-[13px] font-bold text-[#A1A1AA]">WhatsApp {process.env.WHATSAPP_MODE === "cloud" ? "" : "(mock, not sent)"}</h2>
+          <h2 className="text-[13px] font-bold text-[#A1A1AA]">WhatsApp {process.env.WHATSAPP_MODE === "cloud" ? "" : "· preview, live sending coming soon"}</h2>
           <ul className="mt-3 flex flex-col gap-2">
             {sent.map((m) => (
               <li key={m.id} className="max-w-[440px] rounded-[14px] bg-surface px-4 py-3">

@@ -1,8 +1,9 @@
 "use client";
 import { useState, useTransition } from "react";
 import { setWhatsAppAction } from "../actions";
+import { ComingSoon, WaIcon } from "@/components/whatsapp";
 
-export function WhatsAppRow({ phone }: { phone: string | null }) {
+export function WhatsAppRow({ phone, live }: { phone: string | null; live: boolean }) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(phone ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -15,10 +16,21 @@ export function WhatsAppRow({ phone }: { phone: string | null }) {
         setError(null);
       } else setError(r.error);
     });
+  if (!live)
+    return (
+      <div className="flex items-center gap-3 border-b border-surface py-4">
+        <WaIcon size={32} />
+        <span className="flex flex-1 flex-col">
+          <span className="text-[15px] font-bold">WhatsApp alerts</span>
+          <span className="text-[13px] text-muted">Reminders, receipts and payout alerts on WhatsApp.</span>
+        </span>
+        <ComingSoon />
+      </div>
+    );
   return (
     <div className="border-b border-surface py-4">
-      <div className="flex items-baseline justify-between">
-        <span className="text-[15px] text-muted">WhatsApp</span>
+      <div className="flex items-center justify-between gap-3">
+        <span className="flex items-center gap-2.5 text-[15px] text-muted"><WaIcon size={28} /> WhatsApp</span>
         {phone && !editing ? (
           <button onClick={() => save(null)} disabled={pending} className="text-[15px] font-bold text-muted">Turn off</button>
         ) : !editing ? (

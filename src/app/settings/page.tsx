@@ -7,6 +7,7 @@ import { BackBar } from "@/components/ui/top-bar";
 import { TabBar } from "@/components/ui/tab-bar";
 import { currentMember } from "@/lib/auth/session";
 import { whatsAppChannel } from "@/lib/notify/optin";
+import { whatsAppLive } from "@/lib/notify/channels";
 import { logout } from "../actions";
 import { WhatsAppRow } from "./whatsapp";
 
@@ -36,7 +37,7 @@ export default async function Settings() {
             </div>
           ))}
         </dl>
-        <WhatsAppRow phone={wa && wa.optedInAt && !wa.optedOutAt ? wa.phoneE164 : null} />
+        <WhatsAppRow phone={wa && wa.optedInAt && !wa.optedOutAt ? wa.phoneE164 : null} live={whatsAppLive()} />
         <Link href="/score" className="flex min-h-12 items-center justify-between border-b border-surface text-[15px] font-bold text-text no-underline">
           My score <span className="num text-muted">{me.circleScore}</span>
         </Link>

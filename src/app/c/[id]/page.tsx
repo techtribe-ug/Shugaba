@@ -5,6 +5,7 @@ import { Icon } from "@/components/icons";
 import { LiveRefresh } from "@/components/live";
 import { Pebble } from "@/components/pebble";
 import { TabBar } from "@/components/ui/tab-bar";
+import { WaShareLink } from "@/components/whatsapp";
 import { currentMember } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
 import * as s from "@/lib/db/schema";
@@ -71,6 +72,11 @@ export default async function CircleHome({ params }: { params: Promise<{ id: str
             <span className="text-[13px] font-bold text-[#A1A1AA]">Invite code</span>
             <span className="num text-[32px] font-bold tracking-widest">{view.circle.inviteCode}</span>
             <span className="text-sm text-muted">Share /join/{view.circle.inviteCode}</span>
+            <WaShareLink
+              label="Invite on WhatsApp"
+              className="mt-3 inline-flex h-12 items-center justify-center gap-2 rounded-[14px] border border-line px-5 text-[15px] font-bold text-text no-underline"
+              text={`Join my savings circle "${view.circle.name}" on Shugaba: ${process.env.NEXT_PUBLIC_SITE_URL ?? "https://shugaba-demo.onrender.com"}/join/${view.circle.inviteCode}`}
+            />
           </div>
         ) : null}
 

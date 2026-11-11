@@ -72,7 +72,11 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
       ) : !demo ? (
         <p className="text-sm text-muted">Sign-in is not configured.</p>
       ) : null}
-      <Link href="/judge" className="mt-6 text-[15px] font-bold text-muted">Judge panel</Link>
+      <nav aria-label="More" className="mt-6 flex gap-5 text-[15px] font-bold text-muted">
+        <Link href="/judge" className="text-muted">Judge panel</Link>
+        <Link href="/privacy" className="text-muted">Privacy</Link>
+        <Link href="/terms" className="text-muted">Terms</Link>
+      </nav>
     </main>
   );
 }
