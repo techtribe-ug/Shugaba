@@ -35,7 +35,7 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
           Continue with <span className="font-extrabold italic">PayPal</span>
         </a>
       ) : null}
-      <a href="/join" className="mt-1 flex h-13 w-full items-center justify-center text-base font-bold text-text no-underline">I have an invite code</a>
+      <Link href="/join" className="mt-1 flex h-13 w-full items-center justify-center text-base font-bold text-text no-underline">I have an invite code</Link>
       {demo ? (
         <section aria-label="Log in as" className="mt-6 w-full">
           <p className="pb-2 text-[13px] font-bold text-[#A1A1AA]">Demo: log in as</p>
