@@ -10,8 +10,8 @@ import { saveChat } from "@/lib/views/chat";
 export const dynamic = "force-dynamic";
 
 /** PayPal returns here after the member approves an order (`token` is the order id). We capture and apply it. */
-export default async function OrderReturn({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
-  const { token } = await searchParams;
+export default async function OrderReturn({ searchParams }: { searchParams: Promise<{ token?: string; from?: string }> }) {
+  const { token, from } = await searchParams;
   const me = await currentMember();
   if (!me) redirect("/login");
   if (!token) redirect("/home");
@@ -26,7 +26,7 @@ export default async function OrderReturn({ searchParams }: { searchParams: Prom
       const f = await memberFacts(result.circleId, me.id);
       if (f) await saveChat(result.circleId, me.id, "assistant", paidMessage(f), { mood: "pleased", quickReplies: [] }, f.member.language);
     }
-    redirect(`/c/${result.circleId}/chat?paid=1`);
+    redirect(from === "money" ? `/c/${result.circleId}/money?paid=1` : `/c/${result.circleId}/chat?paid=1`);
   }
   return (
     <main className="mx-auto flex min-h-dvh max-w-[420px] flex-col items-center justify-center gap-5 px-6 text-center rise">

@@ -4,6 +4,7 @@ import { Avatar } from "@/components/avatar";
 import { Pebble } from "@/components/pebble";
 import { ScoreBar } from "@/components/score-bar";
 import { BackBar } from "@/components/ui/top-bar";
+import { TabBar } from "@/components/ui/tab-bar";
 import { currentMember } from "@/lib/auth/session";
 import { LEVELS } from "@/lib/protocol";
 import { myCircles } from "@/lib/views/circle";
@@ -70,6 +71,7 @@ export default async function MyScore() {
           </ul>
         </section>
       </main>
+      {circle?.id ? <TabBar circleId={circle!.id} active="me" /> : null}
     </div>
   );
 }

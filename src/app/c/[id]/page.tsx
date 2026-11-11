@@ -4,6 +4,7 @@ import { and, desc, eq, inArray, or } from "drizzle-orm";
 import { Icon } from "@/components/icons";
 import { LiveRefresh } from "@/components/live";
 import { Pebble } from "@/components/pebble";
+import { TabBar } from "@/components/ui/tab-bar";
 import { currentMember } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
 import * as s from "@/lib/db/schema";
@@ -108,7 +109,7 @@ export default async function CircleHome({ params }: { params: Promise<{ id: str
         {view.circle.status === "FORMING" && view.circle.isOrganiser ? <StartButton circleId={id} ready={view.seats.length === view.circle.size && view.seats.every((x) => x.status === "ACTIVE")} /> : null}
       </main>
 
-      <footer className="flex items-center gap-2.5 px-4 pt-3.5 pb-6">
+      <footer className="flex items-center gap-2.5 px-4 pt-3.5 pb-3">
         <form action={`/c/${id}/chat`} className="flex flex-1 items-center gap-2.5">
           <label htmlFor="ask" className="sr-only">Ask Shugaba</label>
           <input id="ask" name="q" placeholder="Ask Shugaba" autoComplete="off" className="h-14 min-w-0 flex-1 rounded-full bg-surface px-[22px] text-base outline-none placeholder:text-muted" />
@@ -117,6 +118,7 @@ export default async function CircleHome({ params }: { params: Promise<{ id: str
           </button>
         </form>
       </footer>
+      <TabBar circleId={id} active="circle" />
     </div>
   );
 }

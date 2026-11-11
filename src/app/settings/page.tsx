@@ -4,6 +4,7 @@ import { db } from "@/lib/db/client";
 import * as s from "@/lib/db/schema";
 import { redirect } from "next/navigation";
 import { BackBar } from "@/components/ui/top-bar";
+import { TabBar } from "@/components/ui/tab-bar";
 import { currentMember } from "@/lib/auth/session";
 import { whatsAppChannel } from "@/lib/notify/optin";
 import { logout } from "../actions";
@@ -48,6 +49,7 @@ export default async function Settings() {
           <button className="flex h-13 w-full items-center justify-center text-[15px] font-bold text-failed">Log out</button>
         </form>
       </main>
+      {circles[0]?.id ? <TabBar circleId={circles[0]!.id} active="me" /> : null}
     </div>
   );
 }
