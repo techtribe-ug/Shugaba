@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { and, eq, inArray, or } from "drizzle-orm";
+import { and, desc, eq, inArray, or } from "drizzle-orm";
 import { Icon } from "@/components/icons";
 import { LiveRefresh } from "@/components/live";
 import { Pebble } from "@/components/pebble";
@@ -28,6 +28,15 @@ export default async function CircleHome({ params }: { params: Promise<{ id: str
     .where(and(eq(s.turnTrades.circleId, id), eq(s.turnTrades.status, "AGREED"), or(eq(s.turnTrades.fromMembership, view.me.membershipId), eq(s.turnTrades.toMembership, view.me.membershipId))));
   const toSign = myTrades.filter((t) => !(t.signaturesJson as Record<string, string>)[view.me!.membershipId]);
   const myRecoveries = await db().select().from(s.recoveries).where(and(eq(s.recoveries.membershipId, view.me.membershipId), inArray(s.recoveries.status, ["OPEN", "PARTIAL"])));
+
+  // My most recent payout that has landed: a way back to the "payout received" moment.
+  const [myPayout] = await db()
+    .select({ roundId: s.rounds.id, amount: s.payouts.amount })
+    .from(s.rounds)
+    .innerJoin(s.payouts, eq(s.payouts.roundId, s.rounds.id))
+    .where(and(eq(s.rounds.circleId, id), eq(s.rounds.recipientMembershipId, view.me.membershipId), eq(s.payouts.status, "SUCCEEDED")))
+    .orderBy(desc(s.rounds.seq))
+    .limit(1);
 
   const showAmount = view.current && view.current.status !== "SCHEDULED";
   return (
@@ -63,6 +72,13 @@ export default async function CircleHome({ params }: { params: Promise<{ id: str
           {view.line}
         </Link>
 
+        {myPayout ? (
+          <Link href={`/c/${id}/payout/${myPayout.roundId}`} className="flex w-full items-center gap-3 border-y border-line py-3 text-text no-underline">
+            <Icon name="shield" color="var(--paid)" />
+            <span className="flex-1 text-[15px] font-bold">Your <span className="num">{formatCents(myPayout.amount)}</span> payout landed in PayPal</span>
+            <Icon name="chevron" size={18} />
+          </Link>
+        ) : null}
         {toSign.map((t) => (
           <Link key={t.id} href={`/c/${id}/trades/${t.id}`} className="flex w-full items-center gap-3 border-y border-line py-3 text-text no-underline">
             <Icon name="swap" />

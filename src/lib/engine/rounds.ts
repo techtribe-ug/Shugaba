@@ -118,6 +118,9 @@ export async function settleAndPay(roundId: string) {
   const out = await db.transaction(async (tx) => {
     const { round, circle } = await lockRound(tx, roundId);
     if (round.status !== "GRACE" && round.status !== "SETTLING" && round.status !== "HELD") return null;
+    // Another runner (worker tick vs. a manual run) already settled this round under the same lock: do nothing.
+    const [already] = await tx.select({ id: s.payouts.id }).from(s.payouts).where(eq(s.payouts.roundId, roundId));
+    if (already) return null;
     const at = await now(tx);
     if (round.status === "GRACE") await tx.update(s.rounds).set({ status: transitionRound("GRACE", "SETTLING") }).where(eq(s.rounds.id, roundId));
     if (round.status === "HELD") await tx.update(s.rounds).set({ status: transitionRound("HELD", "SETTLING") }).where(eq(s.rounds.id, roundId));
@@ -313,6 +316,44 @@ export async function confirmPayout(payoutId: string) {
     await publish(circleId, "payout.completed", { ids: [payoutId] });
     await publish(circleId, "round.updated");
   }
+}
+
+/**
+ * PayPal refused or returned a payout (webhook in sandbox/live). The money stays in the platform account,
+ * the round stays SETTLING, and the payout is marked FAILED so the operator sees it. Idempotent.
+ */
+export async function failPayout(payoutId: string, reason: string) {
+  const db = getDb();
+  const [p] = await db.select().from(s.payouts).where(eq(s.payouts.id, payoutId));
+  if (!p || p.status === "SUCCEEDED" || p.status === "FAILED") return;
+  await db.update(s.payouts).set({ status: "FAILED", updatedAt: new Date() }).where(eq(s.payouts.id, payoutId));
+  console.warn(`[payout] ${payoutId} failed at PayPal: ${reason}`);
+  const [round] = await db.select({ circleId: s.rounds.circleId }).from(s.rounds).where(eq(s.rounds.id, p.roundId));
+  if (round) await publish(round.circleId, "round.updated");
+}
+
+/**
+ * Re-sends a FAILED payout to the recipient's current PayPal email (e.g. after they fixed their account).
+ * PayPal needs a fresh sender_batch_id per attempt; sender_item_id stays the payout id so webhooks still match.
+ */
+export async function retryPayout(payoutId: string) {
+  const db = getDb();
+  const [p] = await db.select().from(s.payouts).where(eq(s.payouts.id, payoutId));
+  if (!p) throw new Error("payout not found");
+  if (p.status !== "FAILED") throw new Error(`payout is ${p.status}, only FAILED payouts can be retried`);
+  const [row] = await db
+    .select({ email: s.members.paypalEmail, fallback: s.members.email, seq: s.rounds.seq, circleName: s.circles.name, circleId: s.circles.id })
+    .from(s.rounds)
+    .innerJoin(s.circles, eq(s.circles.id, s.rounds.circleId))
+    .innerJoin(s.memberships, eq(s.memberships.id, s.rounds.recipientMembershipId))
+    .innerJoin(s.members, eq(s.members.id, s.memberships.memberId))
+    .where(eq(s.rounds.id, p.roundId));
+  if (!row) throw new Error("round or recipient not found");
+  const result = await getPaymentProvider().sendPayout({ recipientEmail: row.email ?? row.fallback, amount: p.amount, currency: "USD", senderItemId: p.id, senderBatchId: `${p.roundId}-retry-${Date.now()}`, note: `${row.circleName}: round ${row.seq} payout` });
+  await db.update(s.payouts).set({ providerBatchId: result.batchId, providerItemId: result.itemId || null, status: result.status === "FAILED" ? "FAILED" : "SENT", updatedAt: new Date() }).where(eq(s.payouts.id, p.id));
+  if (result.status === "SUCCESS") await confirmPayout(p.id);
+  await publish(row.circleId, "round.updated");
+  return { batchId: result.batchId, status: result.status, to: row.email ?? row.fallback };
 }
 
 async function completeCircle(tx: Tx, circle: typeof s.circles.$inferSelect, at: Date) {

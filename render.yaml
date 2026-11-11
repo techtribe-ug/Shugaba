@@ -30,17 +30,23 @@ services:
       - key: PAYPAL_API_BASE
         value: https://api-m.sandbox.paypal.com
       - key: LLM_PROVIDER
-        value: mock
+        value: google
+      - key: LLM_MODEL_AGENT
+        value: gemini-3.6-flash
+      - key: LLM_MODEL_FAST
+        value: gemini-3.1-flash-lite
       - key: LLM_REPLAY
         value: "true"
       - key: WHATSAPP_MODE
         value: mock
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: shugaba-db
+          property: connectionString
       - key: KEY_ENC_SECRET
-        sync: false
+        generateValue: true
       - key: SESSION_SECRET
-        sync: false
+        generateValue: true
       - key: GOOGLE_GENERATIVE_AI_API_KEY
         sync: false
       - key: PAYPAL_CLIENT_ID
@@ -65,3 +71,11 @@ services:
         sync: false
       - key: WHATSAPP_VERIFY_TOKEN
         sync: false
+
+# Free Render Postgres for the demo. Free databases expire 30 days after creation; to keep the demo past that,
+# point DATABASE_URL at a Supabase project instead (see README, Deploy) and remove this block.
+databases:
+  - name: shugaba-db
+    plan: free
+    region: frankfurt
+    postgresMajorVersion: "16"

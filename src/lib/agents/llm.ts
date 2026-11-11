@@ -10,8 +10,9 @@ export function llmProvider(env: Record<string, string | undefined> = process.en
 }
 
 const DEFAULTS: Record<Exclude<LlmProvider, "mock">, Record<ModelKind, string>> = {
-  // VERIFY current ids in Google AI Studio; set LLM_MODEL_AGENT / LLM_MODEL_FAST to override.
-  google: { agent: "gemini-2.5-flash", fast: "gemini-2.5-flash-lite" },
+  // Measured Nov 2026 on a free AI Studio key: 3.6-flash ~1.6 s, 3.1-flash-lite ~1.9 s; 3.8-flash timed out at 40 s and
+  // 2.5 ids are limited to past users. Override with LLM_MODEL_AGENT / LLM_MODEL_FAST.
+  google: { agent: "gemini-3.6-flash", fast: "gemini-3.1-flash-lite" },
   anthropic: { agent: "claude-sonnet-4-5", fast: "claude-haiku-4-5" },
 };
 

@@ -20,7 +20,7 @@ Demo logins are on `/login`. They only exist in demo mode, and the app refuses t
 
 ## The problem
 
-Rotating savings circles are one of the most common ways people save across West Africa and its diaspora. TODO(cite: size of ajo/esusu/adashe participation). They run on trust and WhatsApp groups. When one person misses a payment, the person due to collect is short, and arguments start. Members abroad (Houston, London) and at home (Kano, Lagos, Abuja) cannot easily pay into the same circle.
+Rotating savings circles are one of the most common ways people save across West Africa and its diaspora. In Nigeria alone, 39% of adults (about 40 million people) used informal financial services in 2023, and 11.7 million saved or borrowed through a savings group ([EFInA, Access to Financial Services in Nigeria 2023](https://a2f.ng/wp-content/uploads/2024/07/A2F-2023-SURVEY-REPORT-1.pdf)). They run on trust and WhatsApp groups. When one person misses a payment, the person due to collect is short, and arguments start. Members abroad (Houston, London) and at home (Kano, Lagos, Abuja) cannot easily pay into the same circle.
 
 Shugaba keeps the circle's familiar shape and fixes three things: the recipient always gets the full pot, every payment is on a public ledger anyone can verify, and money moves through PayPal across borders.
 
@@ -52,6 +52,16 @@ missed payment ──▶ pool covers ──▶ recovery invoice (Invoicing v2) �
 - Agents only propose. Only the treasury worker moves money, and every state change writes its ledger event first.
 - The worker (pg-boss) runs inside the web process, so the whole app fits one free Render service.
 - Production would need a licensed custody partner to hold pooled funds. The demo uses the PayPal sandbox or a built-in mock.
+
+## Proven on the PayPal sandbox
+
+The full Family Circle has been run end to end against the real PayPal sandbox, not only the mock:
+
+- **6 members** saved PayPal for automatic contributions (Vault setup tokens, buyer approval, payment tokens).
+- **36 contributions** of $51 charged to the saved PayPal accounts through Orders v2, each with a real capture id.
+- **6 payouts** of $300 sent through Payouts v1, each confirmed by a `PAYMENT.PAYOUTS-ITEM.SUCCEEDED` webhook before the round closed.
+- **78 webhooks** received, every one signature-checked with `verify-webhook-signature`.
+- A payout PayPal refused (`RECEIVER_COUNTRY_NOT_ALLOWED`) was marked failed from its webhook and retried to a corrected account, so a refused payout never leaves a round hanging.
 
 ## PayPal integration
 
@@ -119,6 +129,8 @@ To use real services, fill in the PayPal sandbox, Gemini and WhatsApp keys in `.
 3. Point UptimeRobot at `/api/health` every 5 minutes. `.github/workflows/keepalive.yml` is a backup ping every 6 hours.
 
 ### Known issues
+
+- **Members in Nigeria can pay in but cannot receive a PayPal payout.** PayPal does not allow Nigerian accounts to receive payments (`RECEIVER_COUNTRY_NOT_ALLOWED`). Collections from Nigeria work; a Nigerian member's payout needs another rail (a licensed local payout partner or bank transfer) before launch. Diaspora members (US, UK) receive normally.
 
 - A late joiner takes an open seat through the invite link; the owner does not approve them separately yet.
 - Subscription-mode collection is wired in the provider but not used by the worker. Vault mode is the default.
