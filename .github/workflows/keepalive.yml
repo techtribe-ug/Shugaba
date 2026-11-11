@@ -1,9 +1,10 @@
 name: Keep-alive
 
-# Backup only (spec 4.1): UptimeRobot pings every 5 minutes. GitHub may delay scheduled runs.
+# Keeps the free Render service awake for judges (it sleeps after ~15 idle minutes). Free on a public repo.
+# GitHub can delay scheduled runs; an UptimeRobot 5-minute monitor on /api/health is the belt to this braces.
 on:
   schedule:
-    - cron: "17 */6 * * *"
+    - cron: "*/10 * * * *"
   workflow_dispatch:
 
 permissions: {}

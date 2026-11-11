@@ -12,5 +12,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ key: str
   const id = key === "analyst" ? OPERATOR_ID : cast ? castId(cast.key) : null;
   if (!id) return new NextResponse("Not found", { status: 404 });
   await setSession(id);
-  return NextResponse.redirect(new URL(key === "analyst" ? "/ops" : `/c/${FAMILY_CIRCLE_ID}`, req.url));
+  // Behind Render's proxy req.url is the internal http://localhost:10000, and Next.js turns a relative Location back
+  // into that origin. Build the redirect from the public site URL instead (the request URL only as a local fallback).
+  const base = process.env.NEXT_PUBLIC_SITE_URL || req.url;
+  return NextResponse.redirect(new URL(key === "analyst" ? "/ops" : `/c/${FAMILY_CIRCLE_ID}`, base));
 }

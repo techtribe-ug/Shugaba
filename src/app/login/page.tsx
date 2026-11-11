@@ -6,11 +6,19 @@ import { currentMember } from "@/lib/auth/session";
 import { CAST, castId, OPERATOR_ID } from "@/lib/demo/cast";
 import { levelFor } from "@/lib/protocol";
 import { demoLogin } from "../actions";
+import { paypalLoginEnabled } from "@/lib/auth/paypal-login";
 
 export const dynamic = "force-dynamic";
 
-export default async function Login({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
-  const { next } = await searchParams;
+const ERRORS: Record<string, string> = {
+  "paypal-cancelled": "PayPal sign-in was cancelled. Nothing changed.",
+  "paypal-state": "That sign-in link expired. Please try again.",
+  "paypal-failed": "PayPal didn't confirm who you are. Please try again.",
+  "paypal-off": "PayPal sign-in isn't set up on this server yet.",
+};
+
+export default async function Login({ searchParams }: { searchParams: Promise<{ next?: string; error?: string }> }) {
+  const { next, error } = await searchParams;
   if (await currentMember()) redirect(next ?? "/home");
   const demo = process.env.DEMO_MODE === "true";
   const magic = !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -21,8 +29,15 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
         <span className="font-display text-[52px] font-bold leading-none tracking-tight">shugaba</span>
         <span className="text-center text-[17px] text-muted">Your savings circle, looked after.</span>
       </div>
+      {error && ERRORS[error] ? <p role="alert" className="mb-3 w-full rounded-[12px] bg-surface px-4 py-3 text-[15px]">{ERRORS[error]}</p> : null}
+      {paypalLoginEnabled() ? (
+        <a href={`/login/paypal${next ? `?next=${encodeURIComponent(next)}` : ""}`} className="flex h-14 w-full items-center justify-center gap-1.5 rounded-[14px] bg-text text-base font-bold text-white no-underline">
+          Continue with <span className="font-extrabold italic">PayPal</span>
+        </a>
+      ) : null}
+      <Link href="/join" className="mt-1 flex h-13 w-full items-center justify-center text-base font-bold text-text no-underline">I have an invite code</Link>
       {demo ? (
-        <section aria-label="Log in as" className="w-full">
+        <section aria-label="Log in as" className="mt-6 w-full">
           <p className="pb-2 text-[13px] font-bold text-[#A1A1AA]">Demo: log in as</p>
           <ul className="divide-y divide-surface border-y border-surface">
             {CAST.map((c) => (
@@ -57,7 +72,11 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
       ) : !demo ? (
         <p className="text-sm text-muted">Sign-in is not configured.</p>
       ) : null}
-      <Link href="/judge" className="mt-6 text-[15px] font-bold text-muted">Judge panel</Link>
+      <nav aria-label="More" className="mt-6 flex gap-5 text-[15px] font-bold text-muted">
+        <Link href="/judge" className="text-muted">Judge panel</Link>
+        <Link href="/privacy" className="text-muted">Privacy</Link>
+        <Link href="/terms" className="text-muted">Terms</Link>
+      </nav>
     </main>
   );
 }

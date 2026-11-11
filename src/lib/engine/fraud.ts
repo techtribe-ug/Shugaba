@@ -46,7 +46,9 @@ export async function scanCircle(circleId: string) {
     // 1. Same PayPal email or vault id on two memberships.
     const seen = new Map<string, string>();
     for (const m of ms) {
-      for (const k of [m.email ? `email:${m.email.toLowerCase()}` : null, m.vault ? `vault:${m.vault}` : null]) {
+      // The sandbox demo buyer (SANDBOX_DEMO_VAULT_ID) pays for every cast member on purpose; it is not a shared account.
+      const demoVault = !!m.vault && m.vault === process.env.SANDBOX_DEMO_VAULT_ID;
+      for (const k of [m.email ? `email:${m.email.toLowerCase()}` : null, m.vault && !demoVault ? `vault:${m.vault}` : null]) {
         if (!k) continue;
         const other = seen.get(k);
         if (other && other !== m.memberId) {

@@ -4,6 +4,8 @@ import { and, desc, eq, inArray, or } from "drizzle-orm";
 import { Icon } from "@/components/icons";
 import { LiveRefresh } from "@/components/live";
 import { Pebble } from "@/components/pebble";
+import { TabBar } from "@/components/ui/tab-bar";
+import { WaShareLink } from "@/components/whatsapp";
 import { currentMember } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
 import * as s from "@/lib/db/schema";
@@ -38,6 +40,11 @@ export default async function CircleHome({ params }: { params: Promise<{ id: str
     .orderBy(desc(s.rounds.seq))
     .limit(1);
 
+  // The current round's payout while PayPal is still confirming it: "Shugaba is moving money" (design: GMoney).
+  const [inFlight] = view.current && view.current.status === "SETTLING"
+    ? await db().select({ amount: s.payouts.amount, status: s.payouts.status }).from(s.payouts).where(eq(s.payouts.roundId, view.current.id))
+    : [];
+
   const showAmount = view.current && view.current.status !== "SCHEDULED";
   return (
     <div className="mx-auto flex min-h-dvh max-w-[480px] flex-col">
@@ -65,6 +72,11 @@ export default async function CircleHome({ params }: { params: Promise<{ id: str
             <span className="text-[13px] font-bold text-[#A1A1AA]">Invite code</span>
             <span className="num text-[32px] font-bold tracking-widest">{view.circle.inviteCode}</span>
             <span className="text-sm text-muted">Share /join/{view.circle.inviteCode}</span>
+            <WaShareLink
+              label="Invite on WhatsApp"
+              className="mt-3 inline-flex h-12 items-center justify-center gap-2 rounded-[14px] border border-line px-5 text-[15px] font-bold text-text no-underline"
+              text={`Join my savings circle "${view.circle.name}" on Shugaba: ${process.env.NEXT_PUBLIC_SITE_URL ?? "https://shugaba-demo.onrender.com"}/join/${view.circle.inviteCode}`}
+            />
           </div>
         ) : null}
 
@@ -72,6 +84,13 @@ export default async function CircleHome({ params }: { params: Promise<{ id: str
           {view.line}
         </Link>
 
+        {inFlight && inFlight.status !== "SUCCEEDED" ? (
+          <Link href={`/c/${id}/payout/${view.current!.id}`} className="flex w-full items-center gap-3 border-y border-line py-3 text-text no-underline">
+            <Icon name="out" color="var(--accent)" />
+            <span className="flex-1 text-[15px] font-bold">Shugaba is moving <span className="num">{formatCents(inFlight.amount)}</span> to {view.current!.recipient}</span>
+            <Icon name="chevron" size={18} />
+          </Link>
+        ) : null}
         {myPayout ? (
           <Link href={`/c/${id}/payout/${myPayout.roundId}`} className="flex w-full items-center gap-3 border-y border-line py-3 text-text no-underline">
             <Icon name="shield" color="var(--paid)" />
@@ -96,7 +115,7 @@ export default async function CircleHome({ params }: { params: Promise<{ id: str
         {view.circle.status === "FORMING" && view.circle.isOrganiser ? <StartButton circleId={id} ready={view.seats.length === view.circle.size && view.seats.every((x) => x.status === "ACTIVE")} /> : null}
       </main>
 
-      <footer className="flex items-center gap-2.5 px-4 pt-3.5 pb-6">
+      <footer className="flex items-center gap-2.5 px-4 pt-3.5 pb-3">
         <form action={`/c/${id}/chat`} className="flex flex-1 items-center gap-2.5">
           <label htmlFor="ask" className="sr-only">Ask Shugaba</label>
           <input id="ask" name="q" placeholder="Ask Shugaba" autoComplete="off" className="h-14 min-w-0 flex-1 rounded-full bg-surface px-[22px] text-base outline-none placeholder:text-muted" />
@@ -105,6 +124,7 @@ export default async function CircleHome({ params }: { params: Promise<{ id: str
           </button>
         </form>
       </footer>
+      <TabBar circleId={id} active="circle" />
     </div>
   );
 }

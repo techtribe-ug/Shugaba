@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db/client";
 import { seedDemo } from "@/lib/db/seed-core";
 import { advanceGolden, failMusaNext, payMusaInvoice, runTundeSwap } from "@/lib/demo/golden";
-import { resetMockProvider } from "@/lib/paypal";
+import { resetMockProvider, setSimulatedOutage } from "@/lib/paypal";
 import { rateLimit } from "@/lib/security/rate-limit";
 
 export type JudgeResult = { ok: boolean; message: string };
@@ -34,6 +34,11 @@ export const judgeSwap = async () =>
     return r.agreed ? "The agents agreed. Tunde and Ifeoma must each confirm." : "No agent accepted the swap.";
   });
 export const judgePayInvoice = async (part: 1 | 2) => run(() => payMusaInvoice(part === 2 ? 2 : 1));
+export const judgeOutage = async (on: boolean) =>
+  run(async () => {
+    setSimulatedOutage(on);
+    return on ? "PayPal outage simulated: money stops, nothing is charged. Every page now shows the PayPal-down notice." : "PayPal is back. Due work resumes on the next tick.";
+  });
 export const judgeReset = async () =>
   run(async () => {
     resetMockProvider();

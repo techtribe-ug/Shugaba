@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { sendNotice } from "@/lib/notify/dispatch";
 import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
@@ -120,6 +121,8 @@ export async function setWhatsAppAction(phone: string | null): Promise<ActionRes
   if (clean !== null && !E164.test(clean)) return { ok: false, error: "Use the full number with country code, like +234 803 123 4567." };
   try {
     await setWhatsApp(me.id, clean, "settings");
+    // Confirm the number works with Meta's pre-approved test template: a real WhatsApp arrives straight away.
+    if (clean) await sendNotice({ memberId: me.id, template: "hello_world", params: [], ledgerSeq: null });
     revalidatePath("/settings");
     return { ok: true };
   } catch (e) {

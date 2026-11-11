@@ -269,7 +269,14 @@ export async function settleAndPay(roundId: string) {
   }
 
   // Money leaves through PayPal Payouts. sender_batch_id = round id, sender_item_id = payout id.
-  const result = await getPaymentProvider().sendPayout({ recipientEmail: out.recipientEmail, amount: out.amount, currency: "USD", senderItemId: out.payoutId, senderBatchId: roundId, note: `${out.circleName}: round ${out.seq} payout` });
+  let result: Awaited<ReturnType<ReturnType<typeof getPaymentProvider>["sendPayout"]>>;
+  try {
+    result = await getPaymentProvider().sendPayout({ recipientEmail: out.recipientEmail, amount: out.amount, currency: "USD", senderItemId: out.payoutId, senderBatchId: roundId, note: `${out.circleName}: round ${out.seq} payout` });
+  } catch (e) {
+    // PayPal unreachable: record it as failed (retryPayout resends it) rather than leaving it PENDING forever.
+    await failPayout(out.payoutId, `PAYPAL_UNAVAILABLE: ${e instanceof Error ? e.message : String(e)}`);
+    throw e;
+  }
   await db.update(s.payouts).set({ providerBatchId: result.batchId, providerItemId: result.itemId || null, status: result.status === "FAILED" ? "FAILED" : "SENT", updatedAt: new Date() }).where(eq(s.payouts.id, out.payoutId));
   if (result.status === "SUCCESS") await confirmPayout(out.payoutId);
   // A late joiner's holdback refunds the member who left, as a separate PayPal payout.

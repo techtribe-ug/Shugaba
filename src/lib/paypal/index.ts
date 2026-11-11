@@ -6,6 +6,7 @@ export * from "./types";
 export { MockProvider } from "./mock";
 export { PayPalProvider } from "./paypal";
 export { toPayPalValue, fromPayPalValue } from "./amount";
+export { paypalStatus, setSimulatedOutage, recordPayPalOk, PayPalUnavailableError } from "./health";
 
 const g = globalThis as unknown as { __shugabaPayments?: PaymentProvider };
 

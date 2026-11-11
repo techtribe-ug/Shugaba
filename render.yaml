@@ -6,7 +6,6 @@ services:
     runtime: node
     plan: free
     region: frankfurt
-    branch: main
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
     startCommand: pnpm db:migrate && pnpm db:seed --if-empty && pnpm start
     healthCheckPath: /api/health
@@ -24,7 +23,7 @@ services:
       - key: CLOCK_SPEED
         value: "1"
       - key: PAYMENT_PROVIDER
-        value: mock
+        value: paypal
       - key: COLLECTION_MODE
         value: vault
       - key: PAYPAL_API_BASE
@@ -49,14 +48,32 @@ services:
         generateValue: true
       - key: GOOGLE_GENERATIVE_AI_API_KEY
         sync: false
-      - key: PAYPAL_CLIENT_ID
+      # Sandbox test accounts (not secrets). Recipients are US sandbox accounts: PayPal cannot pay out to Nigerian accounts.
+      - key: PAYPAL_PLATFORM_EMAIL
+        value: sb-ukgiv53776854@business.example.com
+      - key: SANDBOX_EMAIL_AMINA
+        value: sb-tiejb53813842@personal.example.com
+      - key: SANDBOX_EMAIL_MUSA
+        value: sb-yieti53813864@personal.example.com
+      - key: SANDBOX_EMAIL_NGOZI
+        value: sb-dje7553813869@personal.example.com
+      - key: SANDBOX_EMAIL_TUNDE
+        value: sb-wqj44353813870@personal.example.com
+      - key: SANDBOX_EMAIL_IFEOMA
+        value: sb-pmbgk53813871@personal.example.com
+      - key: SANDBOX_EMAIL_SANI
+        value: sb-gonie53813876@personal.example.com
+      - key: SANDBOX_DEMO_VAULT_ID
         sync: false
+      - key: PAYPAL_CLIENT_ID
+        value: AXITB8t7wc0npxkgntmk-1VyEcvTlJQ8j67vHksgmW0LAxNjJMN961pXmx9cuq46ghJSPe3KJVoL6BCE
       - key: PAYPAL_CLIENT_SECRET
         sync: false
+      # Webhook registered for https://shugaba-demo.onrender.com/api/webhooks/paypal (an id, not a secret).
       - key: PAYPAL_WEBHOOK_ID
-        sync: false
+        value: 9R39776592079010J
       - key: NEXT_PUBLIC_PAYPAL_CLIENT_ID
-        sync: false
+        value: AXITB8t7wc0npxkgntmk-1VyEcvTlJQ8j67vHksgmW0LAxNjJMN961pXmx9cuq46ghJSPe3KJVoL6BCE
       - key: NEXT_PUBLIC_SUPABASE_URL
         sync: false
       - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
