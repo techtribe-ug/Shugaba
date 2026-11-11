@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { db as getDb } from "@/lib/db/client";
 import * as s from "@/lib/db/schema";
 import { fromPayPalValue, type ProviderEvent } from "@/lib/paypal";
-import { confirmPayout, recordChargeResult } from "./rounds";
+import { confirmPayout, failPayout, recordChargeResult } from "./rounds";
 import { applyRecoveryPayment } from "./recovery";
 
 /** Stores a verified event once. Returns false for a duplicate (spec 7.4: replay changes nothing). */
@@ -23,6 +23,26 @@ export async function processWebhook(eventId: string) {
       case "PAYMENT.PAYOUTS-ITEM.SUCCEEDED": {
         const payoutId = String((r.payout_item as { sender_item_id?: string } | undefined)?.sender_item_id ?? r.sender_item_id ?? "");
         if (payoutId) await confirmPayout(payoutId);
+        break;
+      }
+      case "PAYMENT.PAYOUTS-ITEM.FAILED":
+      case "PAYMENT.PAYOUTS-ITEM.BLOCKED":
+      case "PAYMENT.PAYOUTS-ITEM.DENIED":
+      case "PAYMENT.PAYOUTS-ITEM.RETURNED":
+      case "PAYMENT.PAYOUTS-ITEM.REFUNDED":
+      case "PAYMENT.PAYOUTS-ITEM.CANCELED": {
+        const payoutId = String((r.payout_item as { sender_item_id?: string } | undefined)?.sender_item_id ?? r.sender_item_id ?? "");
+        const why = (r.errors as { name?: string } | undefined)?.name ?? e.type.split(".").pop()!;
+        if (payoutId) await failPayout(payoutId, why);
+        break;
+      }
+      case "PAYMENT.PAYOUTSBATCH.DENIED": {
+        // Whole batch refused: fail every payout we sent in it. sender_batch_id is the round id.
+        const hdr = r.batch_header as { payout_batch_id?: string } | undefined;
+        if (hdr?.payout_batch_id) {
+          const sent = await db.select({ id: s.payouts.id }).from(s.payouts).where(eq(s.payouts.providerBatchId, hdr.payout_batch_id));
+          for (const p of sent) await failPayout(p.id, "BATCH_DENIED");
+        }
         break;
       }
       case "PAYMENT.CAPTURE.COMPLETED": {
