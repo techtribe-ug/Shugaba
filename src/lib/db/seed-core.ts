@@ -1,7 +1,7 @@
 import { eq, inArray, sql } from "drizzle-orm";
 import { encryptPrivateKey, generateSigningKeys, signMessage } from "@/lib/crypto/sign";
 import { rulesFor, rulesHash } from "@/lib/circles/rules";
-import { CAST, castEmail, castId, castPaypalEmail, FAMILY_CIRCLE_ID, FAMILY_INVITE, OPERATOR_EMAIL, OPERATOR_ID } from "@/lib/demo/cast";
+import { CAST, castEmail, castId, castPaypalEmail, castVaultId, FAMILY_CIRCLE_ID, FAMILY_INVITE, OPERATOR_EMAIL, OPERATOR_ID } from "@/lib/demo/cast";
 import { stableId } from "@/lib/ids";
 import type { Db } from "./client";
 import { appendLedger } from "./ledger";
@@ -18,8 +18,8 @@ export async function seedDemo(db: Db, opts: { now?: Date; clockSpeed?: number }
   await db.transaction(async (tx) => {
     // Members.
     const people = [
-      ...CAST.map((c) => ({ id: castId(c.key), name: c.name, email: castEmail(c.key), country: c.country, language: c.language, paypalEmail: castPaypalEmail(c.key), score: c.score, isOperator: false })),
-      { id: OPERATOR_ID, name: "Treasury analyst", email: OPERATOR_EMAIL, country: "NG", language: "en" as const, paypalEmail: null, score: 550, isOperator: true },
+      ...CAST.map((c) => ({ id: castId(c.key), name: c.name, email: castEmail(c.key), country: c.country, language: c.language, paypalEmail: castPaypalEmail(c.key), paypalVaultId: castVaultId(), score: c.score, isOperator: false })),
+      { id: OPERATOR_ID, name: "Treasury analyst", email: OPERATOR_EMAIL, country: "NG", language: "en" as const, paypalEmail: null, paypalVaultId: null, score: 550, isOperator: true },
     ];
     const existing = await tx.select({ id: s.members.id }).from(s.members).where(inArray(s.members.id, people.map((p) => p.id)));
     const have = new Set(existing.map((e) => e.id));
@@ -27,7 +27,7 @@ export async function seedDemo(db: Db, opts: { now?: Date; clockSpeed?: number }
       if (have.has(p.id)) {
         await tx
           .update(s.members)
-          .set({ name: p.name, email: p.email, country: p.country, language: p.language, paypalEmail: p.paypalEmail, paypalVaultId: null, circleScore: p.score, isOperator: p.isOperator, isDemo: true, updatedAt: now })
+          .set({ name: p.name, email: p.email, country: p.country, language: p.language, paypalEmail: p.paypalEmail, paypalVaultId: p.paypalVaultId, paymentMethodChangedAt: null, circleScore: p.score, isOperator: p.isOperator, isDemo: true, updatedAt: now })
           .where(eq(s.members.id, p.id));
       } else {
         const keys = generateSigningKeys();
@@ -38,6 +38,7 @@ export async function seedDemo(db: Db, opts: { now?: Date; clockSpeed?: number }
           country: p.country,
           language: p.language,
           paypalEmail: p.paypalEmail,
+          paypalVaultId: p.paypalVaultId,
           publicKey: keys.publicKey,
           privateKeyEnc: encryptPrivateKey(keys.privateKey),
           circleScore: p.score,

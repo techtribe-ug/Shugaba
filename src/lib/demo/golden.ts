@@ -2,7 +2,7 @@ import { and, asc, eq, inArray } from "drizzle-orm";
 import type { Rationale } from "@/lib/agents/market";
 import { db as getDb } from "@/lib/db/client";
 import * as s from "@/lib/db/schema";
-import { getMockProvider } from "@/lib/paypal";
+import { getPaymentProvider } from "@/lib/paypal";
 import { acceptOrderAndStart, applyRecoveryPayment, joinCircle, moveClockTo, now, requestSwap, runDue, signTrade, startMandate } from "@/lib/engine";
 import { CAST, castId, FAMILY_CIRCLE_ID, FAMILY_INVITE, type CastMember } from "./cast";
 
@@ -105,10 +105,12 @@ export async function advanceGolden(): Promise<string> {
 }
 
 export async function failMusaNext() {
-  const mock = getMockProvider();
+  // Mock: the mock fails it. Sandbox: PayPal itself declines the charge (negative testing).
+  const provider = getPaymentProvider() as { forceFail?: (customIdPrefix: string) => void };
   const m = await membershipOf("musa");
-  if (!mock || !m) throw new Error("only in mock mode, after Musa joined");
-  mock.forceFail(m.id);
+  if (!m) throw new Error("Musa has not joined yet");
+  if (!provider.forceFail) throw new Error("this payment provider cannot simulate a failed payment");
+  provider.forceFail(m.id);
 }
 
 /** Step 8: Tunde's agent asks; other agents answer inside their prefs; both humans sign. */

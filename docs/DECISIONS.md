@@ -37,3 +37,11 @@ Choices made while building, where the build differs from the spec or the spec l
 
 - Web push (VAPID). Notifications show in-app at `/notifications`.
 - next-intl UI translation. Shugaba's own messages are in English, Pidgin and Hausa; UI chrome is English.
+
+## Sandbox demo (added 11 Nov)
+
+- **The live demo runs on the PayPal sandbox.** Every judge-panel step makes real sandbox calls: vaulted charges, Payouts, an Invoicing invoice and verified webhooks.
+- **One pre-approved sandbox buyer pays for all six cast members.** Its payment token is `SANDBOX_DEMO_VAULT_ID` (secret env var, never in git). The seed attaches it to the cast in PayPal mode, so Join needs no PayPal login. Fraud rule 1 ignores that one token on purpose; any other shared token is still flagged.
+- **Musa's failed payment is a real sandbox decline.** `PayPalProvider.forceFail` sends PayPal's negative-testing header (`PayPal-Mock-Response: INSTRUMENT_DECLINED`) on his next charge, so the decline, grace, pool cover and invoice paths all run against PayPal. Sandbox only; it throws against live.
+- **Refused payouts.** Payout webhooks other than SUCCEEDED (failed, blocked, denied, returned, batch denied) mark the payout FAILED; `retryPayout` resends it to the member's current PayPal email.
+- **Payout recipients are US sandbox accounts.** PayPal does not let Nigerian accounts receive payments (`RECEIVER_COUNTRY_NOT_ALLOWED`); Nigerian members need another payout rail before launch.

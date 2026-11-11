@@ -47,12 +47,14 @@ export class PayPalClient {
     return this.token.value;
   }
 
-  async request<T>(method: "GET" | "POST" | "PATCH", path: string, opts: { body?: unknown; requestId?: string; prefer?: string } = {}): Promise<T> {
+  async request<T>(method: "GET" | "POST" | "PATCH", path: string, opts: { body?: unknown; requestId?: string; prefer?: string; mockResponse?: string } = {}): Promise<T> {
     const maxAttempts = 4;
     for (let attempt = 1; ; attempt++) {
       const headers: Record<string, string> = { Authorization: `Bearer ${await this.accessToken()}`, "Content-Type": "application/json" };
       if (method === "POST") headers["PayPal-Request-Id"] = opts.requestId ?? crypto.randomUUID();
       if (opts.prefer) headers.Prefer = opts.prefer;
+      // Sandbox negative testing: PayPal returns the named error instead of processing (never sent unless asked for).
+      if (opts.mockResponse) headers["PayPal-Mock-Response"] = opts.mockResponse;
       const res = await this.fetch(`${this.cfg.baseUrl}${path}`, { method, headers, body: opts.body === undefined ? undefined : JSON.stringify(opts.body) });
       if (res.ok) return (res.status === 204 ? undefined : await safeJson(res)) as T;
       if (res.status === 401 && attempt === 1) {

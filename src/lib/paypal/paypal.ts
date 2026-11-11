@@ -12,7 +12,7 @@ export class PayPalProvider implements PaymentProvider {
   private http: PayPalClient;
 
   constructor(
-    cfg: PayPalConfig,
+    private cfg: PayPalConfig,
     private extra: { webhookId?: string; productId?: string; brandName?: string } = {},
   ) {
     this.http = new PayPalClient(cfg);
@@ -53,10 +53,24 @@ export class PayPalProvider implements PaymentProvider {
   }
 
   // VERIFY: https://developer.paypal.com/api/payment-tokens/save-without-purchase/paypal (charge with vault_id; order returns COMPLETED)
+  private failNext = new Set<string>();
+
+  /**
+   * Judge panel: the next vaulted charge whose custom id starts with this prefix is declined by the PayPal
+   * sandbox itself (negative testing), so the real decline path runs end to end. Sandbox only.
+   */
+  forceFail(customIdPrefix: string) {
+    if (!this.cfg.baseUrl.includes("sandbox")) throw new Error("forceFail only works against the PayPal sandbox");
+    this.failNext.add(customIdPrefix);
+  }
+
   async chargeVaulted(input: { vaultId: string; amount: Cents; currency: Currency; idempotencyKey: string; customId: string; description?: string }): Promise<ChargeResult> {
+    const forced = [...this.failNext].find((p) => input.customId.startsWith(p));
+    if (forced) this.failNext.delete(forced);
     try {
       const res = await this.http.request<{ id: string; status: string; purchase_units?: { payments?: { captures?: { id: string; status: string }[] } }[] }>("POST", "/v2/checkout/orders", {
-        requestId: input.idempotencyKey,
+        requestId: forced ? `${input.idempotencyKey}-declined` : input.idempotencyKey,
+        mockResponse: forced ? JSON.stringify({ mock_application_codes: "INSTRUMENT_DECLINED" }) : undefined,
         body: {
           intent: "CAPTURE",
           purchase_units: [{ amount: money(input.amount, input.currency), custom_id: input.customId, description: input.description }],

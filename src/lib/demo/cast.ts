@@ -32,6 +32,14 @@ export function castPaypalEmail(key: string, env: Record<string, string | undefi
   return env[`SANDBOX_EMAIL_${key.toUpperCase()}`] || `${key}@example.com`;
 }
 
+/**
+ * Sandbox demo only: one sandbox buyer account, already approved for this app, pays for all six cast members, so judges
+ * never need a PayPal login. Its payment token is SANDBOX_DEMO_VAULT_ID (a secret env var, never in git).
+ */
+export function castVaultId(env: Record<string, string | undefined> = process.env): string | null {
+  return env.PAYMENT_PROVIDER === "paypal" ? env.SANDBOX_DEMO_VAULT_ID || null : null;
+}
+
 export function castByMemberId(memberId: string): CastMember | undefined {
   return CAST.find((c) => castId(c.key) === memberId);
 }
