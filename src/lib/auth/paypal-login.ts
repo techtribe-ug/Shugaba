@@ -1,4 +1,4 @@
-import { eq, or, sql } from "drizzle-orm";
+import { desc, eq, or, sql } from "drizzle-orm";
 import { encryptPrivateKey, generateSigningKeys } from "@/lib/crypto/sign";
 import { db } from "@/lib/db/client";
 import * as s from "@/lib/db/schema";
@@ -57,6 +57,8 @@ export async function memberForPayPal(who: { email: string; name: string }): Pro
     .select({ id: s.members.id })
     .from(s.members)
     .where(or(sql`lower(${s.members.paypalEmail}) = ${who.email}`, sql`lower(${s.members.email}) = ${who.email}`))
+    // A demo cast member wins over an account created by an earlier sign-in with the same PayPal email.
+    .orderBy(desc(s.members.isDemo), s.members.createdAt)
     .limit(1);
   if (found) return found.id;
   const keys = generateSigningKeys();

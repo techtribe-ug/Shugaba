@@ -20,6 +20,8 @@ export async function GET(req: Request) {
   try {
     const who = await paypalIdentity(code);
     const memberId = await memberForPayPal(who);
+    // Sandbox only: which test account signed in, to match it to a demo member.
+    if ((process.env.PAYPAL_API_BASE ?? "sandbox").includes("sandbox")) console.log(`[login] PayPal sign-in ${who.email} -> member ${memberId}`);
     await setSession(memberId);
     return NextResponse.redirect(new URL(next, site()));
   } catch (e) {

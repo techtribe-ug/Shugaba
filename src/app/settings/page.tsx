@@ -24,6 +24,8 @@ export default async function Settings() {
     ["Country", me.country],
   ];
   const wa = await whatsAppChannel(me.id);
+  // The member's own PayPal account (shown only to them).
+  const [pp] = await db().select({ paypalEmail: s.members.paypalEmail }).from(s.members).where(eq(s.members.id, me.id));
   const circles = await db().select({ id: s.circles.id, name: s.circles.name }).from(s.memberships).innerJoin(s.circles, eq(s.circles.id, s.memberships.circleId)).where(and(eq(s.memberships.memberId, me.id), inArray(s.memberships.status, ["SIGNED", "ACTIVE", "PAUSED"]), inArray(s.circles.status, ["FORMING", "ACTIVE", "PAUSED"])));
   return (
     <div className="mx-auto flex min-h-dvh max-w-[560px] flex-col">
@@ -37,6 +39,19 @@ export default async function Settings() {
             </div>
           ))}
         </dl>
+        <div className="flex items-center justify-between gap-3 border-b border-surface py-4">
+          <span className="text-[15px] text-muted">
+            <span className="font-extrabold italic text-text">PayPal</span>
+          </span>
+          {pp?.paypalEmail ? (
+            <span className="flex min-w-0 flex-col items-end">
+              <span className="max-w-[240px] truncate text-[15px] font-bold">{pp.paypalEmail}</span>
+              <span className="text-[13px] font-bold text-paid">Connected</span>
+            </span>
+          ) : (
+            <span className="text-[15px] text-muted">Not connected</span>
+          )}
+        </div>
         <WhatsAppRow phone={wa && wa.optedInAt && !wa.optedOutAt ? wa.phoneE164 : null} live={whatsAppLive()} />
         <Link href="/score" className="flex min-h-12 items-center justify-between border-b border-surface text-[15px] font-bold text-text no-underline">
           My score <span className="num text-muted">{me.circleScore}</span>
