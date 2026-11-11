@@ -3,6 +3,7 @@ import { encryptPrivateKey, generateSigningKeys } from "@/lib/crypto/sign";
 import { db } from "@/lib/db/client";
 import * as s from "@/lib/db/schema";
 import { uuidv7 } from "@/lib/ids";
+import { CAST, castId, castPaypalEmail } from "@/lib/demo/cast";
 
 /**
  * Log in with PayPal (OAuth 2 / OpenID Connect).
@@ -53,6 +54,13 @@ export async function paypalIdentity(code: string): Promise<{ payerId: string | 
 /** The member this PayPal account belongs to (by PayPal email or sign-in email), created on first sign-in. */
 export async function memberForPayPal(who: { email: string; name: string }): Promise<string> {
   const d = db();
+  // Sandbox demo: an account listed as SANDBOX_EMAIL_<NAME> is that cast member (e.g. Musa), even if the
+  // demo data was seeded before the email was configured.
+  const cast = CAST.find((c) => castPaypalEmail(c.key).toLowerCase() === who.email);
+  if (cast) {
+    const [hit] = await d.update(s.members).set({ paypalEmail: who.email, updatedAt: new Date() }).where(eq(s.members.id, castId(cast.key))).returning({ id: s.members.id });
+    if (hit) return hit.id;
+  }
   const [found] = await d
     .select({ id: s.members.id })
     .from(s.members)
