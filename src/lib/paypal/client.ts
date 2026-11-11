@@ -5,6 +5,8 @@
 // VERIFY: https://developer.paypal.com/api/rest/authentication/
 export type PayPalConfig = { baseUrl: string; clientId: string; clientSecret: string; fetchImpl?: typeof fetch; sleep?: (ms: number) => Promise<void> };
 
+import { assertPayPalAvailable, recordPayPalFailure, recordPayPalOk } from "./health";
+
 export class PayPalHttpError extends Error {
   constructor(
     public status: number,
@@ -48,6 +50,7 @@ export class PayPalClient {
   }
 
   async request<T>(method: "GET" | "POST" | "PATCH", path: string, opts: { body?: unknown; requestId?: string; prefer?: string; mockResponse?: string } = {}): Promise<T> {
+    assertPayPalAvailable();
     const maxAttempts = 4;
     for (let attempt = 1; ; attempt++) {
       const headers: Record<string, string> = { Authorization: `Bearer ${await this.accessToken()}`, "Content-Type": "application/json" };
@@ -55,13 +58,22 @@ export class PayPalClient {
       if (opts.prefer) headers.Prefer = opts.prefer;
       // Sandbox negative testing: PayPal returns the named error instead of processing (never sent unless asked for).
       if (opts.mockResponse) headers["PayPal-Mock-Response"] = opts.mockResponse;
-      const res = await this.fetch(`${this.cfg.baseUrl}${path}`, { method, headers, body: opts.body === undefined ? undefined : JSON.stringify(opts.body) });
+      let res: Response;
+      try {
+        res = await this.fetch(`${this.cfg.baseUrl}${path}`, { method, headers, body: opts.body === undefined ? undefined : JSON.stringify(opts.body) });
+      } catch (e) {
+        recordPayPalFailure(`network: ${e instanceof Error ? e.message : String(e)}`);
+        throw e;
+      }
+      // Any answer below 500 (other than 429) means PayPal is up, even if it refused this request.
+      if (res.status < 500 && res.status !== 429) recordPayPalOk();
       if (res.ok) return (res.status === 204 ? undefined : await safeJson(res)) as T;
       if (res.status === 401 && attempt === 1) {
         this.token = null;
         continue;
       }
       const retryable = res.status === 429 || res.status >= 500;
+      if (retryable && attempt >= maxAttempts) recordPayPalFailure(`HTTP ${res.status} on ${method} ${path}`);
       if (!retryable || attempt >= maxAttempts) throw new PayPalHttpError(res.status, await safeJson(res), res.headers.get("paypal-debug-id"));
       await this.sleep(2 ** attempt * 250);
     }

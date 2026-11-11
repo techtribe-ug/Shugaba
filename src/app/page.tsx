@@ -25,6 +25,9 @@ export default function Landing() {
         >
           Try the demo
         </Link>
+        <Link href="/proof" className="mt-4 text-[15px] font-bold text-accent">
+          See the real PayPal transactions
+        </Link>
       </section>
       <ol className="mt-16 divide-y divide-line border-y border-line">
         {PILLARS.map(([title, body]) => (

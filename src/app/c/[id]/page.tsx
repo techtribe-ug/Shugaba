@@ -38,6 +38,11 @@ export default async function CircleHome({ params }: { params: Promise<{ id: str
     .orderBy(desc(s.rounds.seq))
     .limit(1);
 
+  // The current round's payout while PayPal is still confirming it: "Shugaba is moving money" (design: GMoney).
+  const [inFlight] = view.current && view.current.status === "SETTLING"
+    ? await db().select({ amount: s.payouts.amount, status: s.payouts.status }).from(s.payouts).where(eq(s.payouts.roundId, view.current.id))
+    : [];
+
   const showAmount = view.current && view.current.status !== "SCHEDULED";
   return (
     <div className="mx-auto flex min-h-dvh max-w-[480px] flex-col">
@@ -72,6 +77,13 @@ export default async function CircleHome({ params }: { params: Promise<{ id: str
           {view.line}
         </Link>
 
+        {inFlight && inFlight.status !== "SUCCEEDED" ? (
+          <Link href={`/c/${id}/payout/${view.current!.id}`} className="flex w-full items-center gap-3 border-y border-line py-3 text-text no-underline">
+            <Icon name="out" color="var(--accent)" />
+            <span className="flex-1 text-[15px] font-bold">Shugaba is moving <span className="num">{formatCents(inFlight.amount)}</span> to {view.current!.recipient}</span>
+            <Icon name="chevron" size={18} />
+          </Link>
+        ) : null}
         {myPayout ? (
           <Link href={`/c/${id}/payout/${myPayout.roundId}`} className="flex w-full items-center gap-3 border-y border-line py-3 text-text no-underline">
             <Icon name="shield" color="var(--paid)" />

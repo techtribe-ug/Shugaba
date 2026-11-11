@@ -2,6 +2,7 @@ import Link from "next/link";
 import { and, eq } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 import { Avatar } from "@/components/avatar";
+import { LiveRefresh } from "@/components/live";
 import { Pebble } from "@/components/pebble";
 import { currentMember } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
@@ -47,9 +48,9 @@ export default async function PayoutReceived({ params }: { params: Promise<{ id:
 
   return (
     <div className="relative mx-auto flex min-h-dvh max-w-[560px] flex-col overflow-hidden">
-      {done ? <Leaves /> : null}
+      {done ? <Leaves /> : <LiveRefresh circleId={id} />}
       <main className="flex flex-1 flex-col items-center px-6 pt-28 pb-7 text-center">
-        <Pebble size={96} state={done ? "pleased" : "watching"} />
+        <Pebble size={96} state={done ? "pleased" : "guarding"} />
         {done ? (
           <>
             <span className="num rise mt-8 text-[84px] leading-none font-bold tracking-[-3px] text-paid">{usd(amount)}</span>
@@ -78,10 +79,7 @@ export default async function PayoutReceived({ params }: { params: Promise<{ id:
             </div>
           </>
         ) : (
-          <>
-            <span className="rise mt-8 text-[22px] font-bold">Round {round.seq} payout is on its way to {recipient?.name ?? "the recipient"}.</span>
-            <span className="rise mt-2 text-[15px] text-muted">PayPal is still processing it. This page updates when it lands.</span>
-          </>
+          <MovingMoney amount={amount} to={recipient?.name ?? "the recipient"} covered={covered.map((c) => c.name)} sent={payout?.status === "SENT" || payout?.status === "SUCCEEDED"} failed={payout?.status === "FAILED"} batchId={payout?.providerBatchId ?? null} />
         )}
         <div className="mt-auto flex w-full flex-col gap-1 pt-10">
           <Link href={`/c/${id}`} className="flex h-14 items-center justify-center rounded-[14px] bg-text text-base font-extrabold text-white no-underline">Done</Link>
@@ -89,6 +87,42 @@ export default async function PayoutReceived({ params }: { params: Promise<{ id:
         </div>
       </main>
     </div>
+  );
+}
+
+/** Payout in flight (design: GMoney). Each step lights up as the engine and PayPal confirm it; the page refreshes live. */
+function MovingMoney({ amount, to, covered, sent, failed, batchId }: { amount: number; to: string; covered: string[]; sent: boolean; failed: boolean; batchId: string | null }) {
+  const steps: { label: React.ReactNode; right?: string; state: "done" | "now" | "todo" | "failed" }[] = [
+    { label: "Rules checked", state: "done" },
+    covered.length
+      ? { label: `Pool covered ${covered.join(" and ")}`, state: "done" }
+      : { label: "Everyone paid in", state: "done" },
+    { label: <>Sent with <b className="ml-1 italic">PayPal</b></>, right: batchId ?? undefined, state: failed ? "failed" : sent ? "done" : "now" },
+    { label: failed ? "PayPal refused it. Shugaba is on it." : "PayPal confirms, ledger records it", state: failed ? "failed" : sent ? "now" : "todo" },
+  ];
+  return (
+    <section aria-label="Shugaba is moving money" className="rise mt-6 flex w-full max-w-[400px] flex-col items-center gap-5">
+      <span className="num text-[48px] font-extrabold leading-none tracking-tight">{usd(amount)}</span>
+      <span className="-mt-3 text-base text-muted">to {to}</span>
+      <ol className="flex w-full flex-col gap-3.5 text-left">
+        {steps.map((st, i) => (
+          <li key={i} className={`flex items-center gap-3 text-base ${st.state === "todo" ? "text-muted" : ""}`}>
+            {st.state === "done" ? (
+              <span className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-paid">
+                <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l4 4 10-10" /></svg>
+              </span>
+            ) : st.state === "failed" ? (
+              <span className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-failed text-[15px] font-extrabold text-white">!</span>
+            ) : (
+              <span className={`h-[26px] w-[26px] shrink-0 rounded-full border-[3px] ${st.state === "now" ? "border-accent" : "border-line"}`} />
+            )}
+            <span className="flex-1">{st.label}</span>
+            {st.right ? <span className="font-mono text-[12px] text-muted">{st.right}</span> : null}
+          </li>
+        ))}
+      </ol>
+      <span className="text-[13px] text-muted">This page updates by itself when PayPal confirms.</span>
+    </section>
   );
 }
 

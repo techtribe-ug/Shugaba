@@ -2,11 +2,11 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { btnPrimary } from "@/components/ui/top-bar";
-import { judgeAdvance, judgeFailMusa, judgePayInvoice, judgeReset, judgeSwap, type JudgeResult } from "./actions";
+import { judgeAdvance, judgeFailMusa, judgeOutage, judgePayInvoice, judgeReset, judgeSwap, type JudgeResult } from "./actions";
 
 const quiet = "flex h-11 items-center rounded-[12px] border border-line px-4 text-[15px] font-bold text-text disabled:opacity-50";
 
-export function JudgePanel(props: { step: number; nextLabel: string | null; circleId: string; recoveryOpen: boolean; recoveryPaid: number; tradeId: string | null }) {
+export function JudgePanel(props: { step: number; nextLabel: string | null; circleId: string; recoveryOpen: boolean; recoveryPaid: number; tradeId: string | null; outage: boolean }) {
   const [pending, start] = useTransition();
   const [last, setLast] = useState<JudgeResult | null>(null);
   const act = (fn: () => Promise<JudgeResult>) => () => start(async () => setLast(await fn()));
@@ -29,6 +29,8 @@ export function JudgePanel(props: { step: number; nextLabel: string | null; circ
           <Link href={`/c/${props.circleId}/trades/${props.tradeId}`} className={`${quiet} no-underline`}>Open the swap</Link>
         ) : null}
         <Link href={`/verify/${props.circleId}`} target="_blank" className={`${quiet} no-underline`}>Public ledger</Link>
+        <Link href="/proof" target="_blank" className={`${quiet} no-underline`}>Proof of PayPal</Link>
+        <button className={quiet} disabled={pending} onClick={act(() => judgeOutage(!props.outage))}>{props.outage ? "End PayPal outage" : "Simulate PayPal outage"}</button>
         <button className={`${quiet} text-failed`} disabled={pending} onClick={() => confirm("Reset the demo to the start?") && act(judgeReset)()}>Reset</button>
       </div>
       <p role="status" aria-live="polite" className={`min-h-6 text-[15px] ${last?.ok === false ? "text-failed" : "text-muted"}`}>{last?.message ?? ""}</p>

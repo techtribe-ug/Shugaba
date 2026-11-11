@@ -7,6 +7,7 @@ import { desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import * as s from "@/lib/db/schema";
 import { previewText } from "@/lib/notify/channels";
+import { paypalStatus } from "@/lib/paypal";
 import { JudgePanel } from "./panel";
 
 export const dynamic = "force-dynamic";
@@ -49,6 +50,7 @@ export default async function Judge() {
         recoveryOpen={!!musaRecovery}
         recoveryPaid={musaRecovery?.amountPaid ?? 0}
         tradeId={agreedTrade?.id ?? null}
+        outage={paypalStatus().simulated}
       />
       {sent.length ? (
         <section aria-label="WhatsApp" className="mt-12">
