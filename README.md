@@ -4,8 +4,10 @@
 
 Built for the PayPal AI hackathon.
 
-- Live demo: TODO(link once deployed on Render)
-- Video (under 3 min): TODO(YouTube link)
+- **Live demo:** https://shugaba-demo-cve8.onrender.com (judge panel at [`/judge`](https://shugaba-demo-cve8.onrender.com/judge))
+- **Built with:** PayPal sandbox (Log in with PayPal, Vault v3, Orders v2, Payouts v1, Invoicing v2, Webhooks), Google Gemini, Next.js, PostgreSQL and Render, written with Claude Code as our pair programmer.
+
+![Shugaba](docs/devpost-gallery/01-cover.png)
 
 ---
 
@@ -34,7 +36,13 @@ Shugaba keeps the circle's familiar shape and fixes three things: the recipient 
 | Turn swaps | Drag your turn on the payout calendar. Member agents negotiate a swap within each member's preferences; both members sign. A bonus is held in the pool until the later payout. | `src/lib/engine/market.ts`, `src/components/payout-calendar` |
 | Circle Score | Paying on time earns trust levels (Newcomer, Steady, Trusted, Pillar), awarded by Shugaba. Scores set the payout order and the protection tier. | `src/lib/score`, `src/lib/engine/score.ts` |
 
-TODO(screenshots of home, calendar, chat, ledger, control tower)
+| | |
+|---|---|
+| ![How a round works](docs/devpost-gallery/02-how-a-round-works.png) | ![Receipt](docs/devpost-gallery/04-receipt.png) |
+| ![Missed payment](docs/devpost-gallery/06-missed-payment.png) | ![Shugaba chat](docs/devpost-gallery/07-shugaba-chat.png) |
+| ![Open ledger](docs/devpost-gallery/08-open-ledger.png) | ![Judge panel and control tower](docs/devpost-gallery/11-judge-and-control-tower.png) |
+
+More in [`docs/devpost-gallery`](docs/devpost-gallery).
 
 ## How money moves
 
@@ -65,27 +73,36 @@ The full Family Circle has been run end to end against the real PayPal sandbox, 
 
 ## PayPal integration
 
+Everything runs in the free PayPal sandbox: a sandbox business account is the platform account and sandbox personal accounts are the members.
+
 | Use | API | Endpoint | Code |
 |---|---|---|---|
-| Contributions | Orders v2 | `POST /v2/checkout/orders`, `.../capture` | `src/lib/paypal/paypal.ts` |
-| Automatic contributions | Vault / Subscriptions | `POST /v1/billing/plans`, `/v1/billing/subscriptions` | `src/lib/paypal/paypal.ts` |
+| Sign-in | Log in with PayPal | `/connect`, `POST /v1/oauth2/token` (authorization code), `GET /v1/identity/oauth2/userinfo` | `src/lib/auth/paypal-login.ts` |
+| Save PayPal once | Vault v3 | `POST /v3/vault/setup-tokens`, `POST /v3/vault/payment-tokens` | `src/lib/paypal/paypal.ts` |
+| Contributions (automatic, or early with one tap) | Orders v2 | `POST /v2/checkout/orders` with the vaulted payment source, `.../capture` | `src/lib/paypal/paypal.ts` |
 | Payouts | Payouts v1 | `POST /v1/payments/payouts` | `src/lib/paypal/paypal.ts` |
-| Recovery invoices | Invoicing v2 | `POST /v2/invoicing/invoices`, `.../send` | `src/lib/paypal/paypal.ts` |
+| Recovery invoices (pay back in parts) | Invoicing v2 | `POST /v2/invoicing/invoices`, `.../send` | `src/lib/paypal/paypal.ts` |
 | Reconciliation | Transaction Search | `GET /v1/reporting/transactions` | `src/worker/reconcile.ts` |
 | Webhooks | Notifications | `POST /v1/notifications/verify-webhook-signature` | `src/app/api/webhooks/paypal` |
+
+Every capture, payout and invoice is written to the ledger only after a signature-checked webhook confirms it. A payout PayPal refuses is marked failed and can be sent again. A Subscriptions provider (`/v1/billing/plans`, `/v1/billing/subscriptions`) is also wired but not used by default; Vault mode is the default.
 
 `PAYMENT_PROVIDER=mock` swaps in a mock provider that emits webhook-shaped events through the same pipeline, so the app runs with zero keys.
 
 ## AI
 
+Shugaba uses **Google Gemini** through the Vercel AI SDK (`ai` and `@ai-sdk/google`): `gemini-3.6-flash` for the agents and `gemini-3.1-flash-lite` for fast, short tasks (set with `LLM_MODEL_AGENT` and `LLM_MODEL_FAST`).
+
 | Agent | Model | Purpose | Guardrail | Code |
 |---|---|---|---|---|
-| Shugaba (chat) | Gemini Flash | Answers questions, explains rules, offers payment plans | Facts come from the ledger; a regex guard blocks payout redirects, rule changes, other members' data and prompt injection; money moves need a confirm tap | `src/lib/agents/shugaba.ts`, `guard.ts` |
-| Member agents | Gemini Flash | Negotiate turn swaps within each member's saved preferences | Every offer passes `validateTrade` (bonus cap 5%, tier rule, both signatures) | `src/lib/agents/market.ts` |
-| Narrator | Gemini Flash-Lite | Short lines for the feed and notifications | Templates with numbers filled from the ledger | `src/lib/agents/narrate.ts` |
-| Data analyst | Gemini Flash-Lite | Turns an operator's question into a chart or table spec | Read-only, fixed set of views | `src/lib/agents/analyst.ts` |
+| Shugaba (chat) | Gemini 3.6 Flash | Answers questions, explains rules, offers payment plans | Facts come from the ledger; a regex guard blocks payout redirects, rule changes, other members' data and prompt injection; money moves need a confirm tap | `src/lib/agents/shugaba.ts`, `guard.ts` |
+| Member agents | Gemini 3.6 Flash | Negotiate turn swaps within each member's saved preferences | Every offer passes `validateTrade` (bonus cap 5%, tier rule, both signatures) | `src/lib/agents/market.ts` |
+| Narrator | Gemini 3.1 Flash-Lite | Short lines for the feed and notifications | Templates with numbers filled from the ledger | `src/lib/agents/narrate.ts` |
+| Data analyst | Gemini 3.1 Flash-Lite | Turns an operator's question into a chart or table spec | Read-only, fixed set of views | `src/lib/agents/analyst.ts` |
 
 Every agent call goes through `callAgent`: recorded replay in demo mode, a 10-minute cache, the provider, then a scripted fallback, so the app never breaks when the model is slow or out of quota. Traces land in `agent_traces`. Evals: `pnpm eval:agents` writes [`docs/evals.md`](docs/evals.md) (48/48 in mock mode).
+
+**How we built it.** We wrote Shugaba with **Claude Code** (Anthropic) as our pair programmer, which let three people in two countries work in one codebase. Claude Code is a development tool only; it is not part of the running app.
 
 ## Protection pool maths
 
@@ -99,8 +116,9 @@ Scores run from 300 to 850. On time +, paid in grace +, missed −, repaid partl
 
 ## Sponsor tools
 
-- **Render**: one free web service, see [`render.yaml`](render.yaml).
-- **Bryntum** and **AG Studio**: the payout calendar and control tower ship with built-in fallbacks (`src/components/payout-calendar/grid.tsx`, `src/app/ops`), and the sponsor components can be swapped in when licences are set. See [`docs/DECISIONS.md`](docs/DECISIONS.md).
+- **Render** hosts the live demo: one web service (the Next.js app with the payment worker running inside it) and a PostgreSQL database, both created from the [`render.yaml`](render.yaml) Blueprint. The app pings its own `/api/health` every 10 minutes so a shared link opens without a cold start.
+
+The payout calendar and the control tower use our own components (`src/components/payout-calendar/grid.tsx`, `src/app/ops`).
 
 ## Run locally
 
@@ -124,9 +142,10 @@ To use real services, fill in the PayPal sandbox, Gemini and WhatsApp keys in `.
 
 ### Deploy
 
-1. Create a Supabase free project and copy its pooled connection string.
-2. On Render, create a Blueprint from this repo. Set the `sync: false` secrets in the dashboard (`DATABASE_URL`, `KEY_ENC_SECRET` as 32 random bytes in base64, `SESSION_SECRET` as 32+ random characters).
-3. Point UptimeRobot at `/api/health` every 5 minutes. `.github/workflows/keepalive.yml` is a backup ping every 6 hours.
+1. On Render, choose **New > Blueprint** and point it at this repo. It creates the web service and a PostgreSQL database, and generates `KEY_ENC_SECRET` and `SESSION_SECRET`.
+2. In the dashboard, set the `sync: false` secrets: `PAYPAL_CLIENT_SECRET`, `GOOGLE_GENERATIVE_AI_API_KEY` and `SANDBOX_DEMO_VAULT_ID` (the Supabase and WhatsApp ones are optional). Set `NEXT_PUBLIC_SITE_URL`, `DEMO_ALLOWED_HOSTS` and `PAYPAL_WEBHOOK_ID` for your own host.
+3. In the PayPal developer dashboard, add a webhook for `https://<your-host>/api/webhooks/paypal`, and turn on Log in with PayPal with `https://<your-host>/login/paypal/callback` as a return URL.
+4. The service keeps itself awake by pinging `/api/health` every 10 minutes (`KEEP_AWAKE=false` turns this off). `.github/workflows/keepalive.yml` is a backup ping every 6 hours.
 
 ### Known issues
 
@@ -142,7 +161,7 @@ A licensed custody partner, keys held on the member's device, more languages (Yo
 
 ## Team
 
-Erik, Daniel and Khalid. TODO(full names, links)
+Khalid (Nigeria), Erik and Daniel (Uganda). We started our own savings circle at university and built Shugaba so our communities can save the same way, without the worry.
 
 ## Licence
 
