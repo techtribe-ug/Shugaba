@@ -13,8 +13,13 @@ export class PayPalHttpError extends Error {
     public body: unknown,
     public debugId: string | null,
   ) {
-    super(`PayPal HTTP ${status}${debugId ? ` (debug ${debugId})` : ""}`);
+    super(`PayPal HTTP ${status}${PayPalHttpError.issueOf(body) ? ` ${PayPalHttpError.issueOf(body)}` : ""}${debugId ? ` (debug ${debugId})` : ""}`);
     this.name = "PayPalHttpError";
+  }
+  /** PayPal's error name from a response body (e.g. INSUFFICIENT_FUNDS), or null. Shown in the message for operators. */
+  static issueOf(body: unknown): string | null {
+    const b = body as { name?: string; details?: { issue?: string }[] } | null;
+    return b?.details?.[0]?.issue ?? b?.name ?? null;
   }
   /** PayPal's error name, e.g. INSTRUMENT_DECLINED, from the issue details when present. */
   get issue(): string {
