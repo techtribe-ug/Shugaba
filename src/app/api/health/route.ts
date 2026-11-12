@@ -18,5 +18,7 @@ export async function GET() {
     dbOk = false;
   }
   const worker = workerStatus();
-  return Response.json({ ok: dbOk, db: dbOk, worker: { running: worker.running, lastTickAt: worker.lastTickAt }, clock }, { status: dbOk ? 200 : 503 });
+  // When this process started: if it never changes, the service never went to sleep.
+  const upSince = new Date(Date.now() - process.uptime() * 1000).toISOString();
+  return Response.json({ ok: dbOk, db: dbOk, worker: { running: worker.running, lastTickAt: worker.lastTickAt }, clock, upSince }, { status: dbOk ? 200 : 503 });
 }

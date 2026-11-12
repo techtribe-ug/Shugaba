@@ -7,6 +7,7 @@
   --text: #18181b;
   --muted: #71717a;
   --pebble: #3b358a;
+  --pebble-soft: #ecebf6;
   --eye: #ffffff;
   --paid: #16a34a;
   --accent: #0070e0;
@@ -25,6 +26,7 @@
   --color-text: var(--text);
   --color-muted: var(--muted);
   --color-pebble: var(--pebble);
+  --color-pebble-soft: var(--pebble-soft);
   --color-paid: var(--paid);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
@@ -77,3 +79,8 @@ button:active:not(:disabled) { transform: scale(0.97); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* Landing hero: the line around the circle draws once on load, ending back at the member who was just paid. */
+@keyframes ring-draw { from { stroke-dashoffset: 239; } to { stroke-dashoffset: 0; } }
+.ring-draw { stroke-dasharray: 239; animation: ring-draw 1.8s cubic-bezier(0.6, 0, 0.2, 1) 0.3s both; }
+@media (prefers-reduced-motion: reduce) { .ring-draw { animation: none; } }

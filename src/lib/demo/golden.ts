@@ -4,6 +4,7 @@ import { db as getDb } from "@/lib/db/client";
 import * as s from "@/lib/db/schema";
 import { getPaymentProvider, paypalStatus } from "@/lib/paypal";
 import { acceptOrderAndStart, applyRecoveryPayment, joinCircle, moveClockTo, now, requestSwap, runDue, signTrade, startMandate } from "@/lib/engine";
+import { retryPayout } from "@/lib/engine/rounds";
 import { CAST, castId, FAMILY_CIRCLE_ID, FAMILY_INVITE, type CastMember } from "./cast";
 
 export const GOLDEN_STEPS = [
@@ -67,6 +68,15 @@ export async function advanceToNextDue(): Promise<string> {
   const rounds = await db.select().from(s.rounds).where(eq(s.rounds.circleId, FAMILY_CIRCLE_ID)).orderBy(asc(s.rounds.seq));
   const next = rounds.find((r) => r.status !== "PAID_OUT");
   if (!next) return "nothing left";
+  // A payout PayPal refused (for example, the platform account was short of funds) leaves the round SETTLING.
+  // Pressing Next again resends it instead of getting stuck.
+  if (next.status !== "SCHEDULED") {
+    const [failed] = await db.select().from(s.payouts).where(and(eq(s.payouts.roundId, next.id), eq(s.payouts.status, "FAILED")));
+    if (failed) {
+      await retryPayout(failed.id);
+      return `resent the round ${next.seq} payout`;
+    }
+  }
   const target = next.status === "SCHEDULED" ? next.collectionDueAt : next.payoutDueAt;
   const at = await now(db);
   if (target > at) await moveClockTo(db, new Date(target.getTime() + 1000));
